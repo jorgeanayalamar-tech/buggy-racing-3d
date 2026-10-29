@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Beach Buggy - Nivel 2 (Fotorrealista)</title>
+    <title>Beach Buggy - Llantas Off-Road y Piloto Real</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
         body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Luckiest Guy', cursive; user-select: none; }
@@ -147,30 +147,22 @@
     const matNegro = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.4 });
     const matCromo = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 1.0, roughness: 0.05 });
 
-    // 1. CHASIS PRINCIPAL (Angular, no cápsula)
-    // Base central
-    const base = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.6, 3.8), matRojo);
-    base.position.set(0, 1.1, 0); base.castShadow = true; base.receiveShadow = true; coche.add(base);
+    // 1. CHASIS UNIFICADO (Más grueso y con forma)
+    const chasisBase = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.8, 3.6), matRojo);
+    chasisBase.position.set(0, 1.1, 0); chasisBase.castShadow = true; chasisBase.receiveShadow = true; coche.add(chasisBase);
     
-    // Capó delantero (inclinado)
-    const capo = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.4, 1.5), matRojo);
-    capo.position.set(0, 1.2, 1.3); capo.rotation.x = -0.1; coche.add(capo);
-    
-    // Parte trasera (motor)
-    const trasera = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.8, 1.0), matNegro);
-    trasera.position.set(0, 1.4, -1.8); trasera.castShadow = true; coche.add(trasera);
+    // Capó delantero redondeado
+    const capo = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 2.0, 16, 1, false, 0, Math.PI), matRojo);
+    capo.rotation.z = Math.PI / 2; capo.rotation.x = Math.PI / 2;
+    capo.position.set(0, 1.1, 1.5); capo.scale.set(1, 1, 0.8); capo.castShadow = true; coche.add(capo);
 
-    // Guardabarros (Fenders) sobre las ruedas
+    // Guardabarros traseros (Fenders)
     const fenderGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.4, 16, 1, false, 0, Math.PI);
-    const posFenders = [[-1.1, 1.4, 1.3], [1.1, 1.4, 1.3], [-1.1, 1.4, -1.3], [1.1, 1.4, -1.3]];
-    posFenders.forEach(pos => {
-        const fender = new THREE.Mesh(fenderGeo, matRojo);
-        fender.rotation.z = Math.PI / 2;
-        fender.position.set(pos[0], pos[1], pos[2]);
-        coche.add(fender);
-    });
+    const fenderIzq = new THREE.Mesh(fenderGeo, matRojo);
+    fenderIzq.rotation.z = Math.PI / 2; fenderIzq.position.set(-1.0, 1.3, -1.3); coche.add(fenderIzq);
+    const fenderDer = fenderIzq.clone(); fenderDer.position.x = 1.0; coche.add(fenderDer);
 
-    // 2. CALCOMANÍA "01"
+    // 2. CALCOMANÍA "01" (Textura en los lados)
     const canvasDecal = document.createElement('canvas');
     canvasDecal.width = 512; canvasDecal.height = 512;
     const ctxD = canvasDecal.getContext('2d');
@@ -181,35 +173,35 @@
     const texturaDecal = new THREE.CanvasTexture(canvasDecal);
     const matDecal = new THREE.MeshStandardMaterial({ map: texturaDecal, metalness: 0.4, roughness: 0.3 });
     const lateralIzq = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 0.8), matDecal);
-    lateralIzq.position.set(-1.11, 1.1, 0); lateralIzq.rotation.y = -Math.PI/2; coche.add(lateralIzq);
-    const lateralDer = lateralIzq.clone(); lateralDer.position.x = 1.11; lateralDer.rotation.y = Math.PI/2; coche.add(lateralDer);
+    lateralIzq.position.set(-1.01, 1.1, 0); lateralIzq.rotation.y = -Math.PI/2; coche.add(lateralIzq);
+    const lateralDer = lateralIzq.clone(); lateralDer.position.x = 1.01; lateralDer.rotation.y = Math.PI/2; coche.add(lateralDer);
 
-    // 3. JAULA TUBULAR (Más tubos para darle realismo)
+    // 3. JAULA TUBULAR (Con refuerzos)
     const matJaula = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.9, roughness: 0.3 });
     const puntosJaula = [
-        new THREE.Vector3(-1.0, 1.4, -1.2), new THREE.Vector3(-1.0, 2.8, -0.5), new THREE.Vector3(-0.9, 3.0, 0.6), new THREE.Vector3(-0.9, 1.6, 1.2),
-        new THREE.Vector3(0.9, 1.6, 1.2), new THREE.Vector3(0.9, 3.0, 0.6), new THREE.Vector3(1.0, 2.8, -0.5), new THREE.Vector3(1.0, 1.4, -1.2)
+        new THREE.Vector3(-0.9, 1.5, -1.4), new THREE.Vector3(-0.9, 2.8, -0.6), new THREE.Vector3(-0.8, 3.0, 0.6), new THREE.Vector3(-0.8, 1.6, 1.2),
+        new THREE.Vector3(0.8, 1.6, 1.2), new THREE.Vector3(0.8, 3.0, 0.6), new THREE.Vector3(0.9, 2.8, -0.6), new THREE.Vector3(0.9, 1.5, -1.4)
     ];
     const curvaJaula = new THREE.CatmullRomCurve3(puntosJaula);
     const jaula = new THREE.Mesh(new THREE.TubeGeometry(curvaJaula, 64, 0.08, 12, false), matJaula);
     jaula.castShadow = true; coche.add(jaula);
 
-    // Travesaños de la jaula
-    const tuboTravesaño = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.0, 8), matJaula);
+    // Travesaños
+    const tuboTravesaño = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 8), matJaula);
     tuboTravesaño.rotation.z = Math.PI / 2; tuboTravesaño.position.set(0, 3.0, 0.6); coche.add(tuboTravesaño);
     
-    // Refuerzos diagonales traseros
-    const tuboDiag1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.5, 8), matJaula);
-    tuboDiag1.rotation.x = Math.PI / 4; tuboDiag1.position.set(-1.0, 2.1, -0.8); coche.add(tuboDiag1);
-    const tuboDiag2 = tuboDiag1.clone(); tuboDiag2.position.x = 1.0; coche.add(tuboDiag2);
+    // Refuerzos diagonales
+    const tuboDiag1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 8), matJaula);
+    tuboDiag1.rotation.x = Math.PI / 4; tuboDiag1.position.set(-0.9, 2.15, -1.0); coche.add(tuboDiag1);
+    const tuboDiag2 = tuboDiag1.clone(); tuboDiag2.position.x = 0.9; coche.add(tuboDiag2);
 
     // 4. MOTOR Y ESCAPES
-    const motorBase = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 0.8), matCromo);
-    motorBase.position.set(0, 1.9, -1.6); motorBase.castShadow = true; coche.add(motorBase);
+    const motorBase = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.8), matCromo);
+    motorBase.position.set(0, 1.7, -1.6); motorBase.castShadow = true; coche.add(motorBase);
 
     const escapeGeo = new THREE.CylinderGeometry(0.1, 0.12, 0.6, 16);
     const escapeIzq = new THREE.Mesh(escapeGeo, matCromo);
-    escapeIzq.rotation.x = Math.PI / 2; escapeIzq.position.set(-0.2, 1.1, -2.1); coche.add(escapeIzq);
+    escapeIzq.rotation.x = Math.PI / 2; escapeIzq.position.set(-0.2, 1.0, -2.0); coche.add(escapeIzq);
     const escapeDer = escapeIzq.clone(); escapeDer.position.x = 0.2; coche.add(escapeDer);
 
     // 5. FAROS DEL TECHO
@@ -223,94 +215,87 @@
 
     // 6. ASIENTOS Y VOLANTE
     const asiento = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.5), matNegro);
-    asiento.position.set(0, 1.6, -0.2); coche.add(asiento);
+    asiento.position.set(0, 1.6, -0.4); coche.add(asiento);
     const volante = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.04, 8, 16), matNegro);
     volante.position.set(0, 2.0, 0.5); volante.rotation.x = -Math.PI/4; coche.add(volante);
-            // 7. EL PILOTO
-piloto = new THREE.Group();
+                // 7. EL PILOTO (Cara 3D y Casco)
+    piloto = new THREE.Group();
+    
+    // Torso
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.7, 0.4), matRojo);
+    torso.position.y = 1.9; torso.castShadow = true; piloto.add(torso);
+    const franjaTraje = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.7, 0.42), matBlanco);
+    franjaTraje.position.set(0, 1.9, 0); piloto.add(franjaTraje);
+    const arnes = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.7, 0.42), matNegro);
+    arnes.position.set(0, 1.9, 0); piloto.add(arnes);
 
-// Torso y traje
-const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.7, 0.4), matRojo);
-torso.position.y = 1.9; torso.castShadow = true; piloto.add(torso);
-const franjaTraje = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.7, 0.42), matBlanco);
-franjaTraje.position.set(0, 1.9, 0); piloto.add(franjaTraje);
+    // Brazos
+    const brazoGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 12);
+    const brazoIzq = new THREE.Mesh(brazoGeo, matRojo);
+    brazoIzq.position.set(-0.35, 2.0, 0.1); brazoIzq.rotation.x = Math.PI/3; piloto.add(brazoIzq);
+    const brazoDer = brazoIzq.clone(); brazoDer.position.x = 0.35; piloto.add(brazoDer);
+    const guanteGeo = new THREE.SphereGeometry(0.1, 16, 16);
+    const guanteIzq = new THREE.Mesh(guanteGeo, matNegro); guanteIzq.position.set(-0.35, 1.8, 0.4); piloto.add(guanteIzq);
+    const guanteDer = guanteIzq.clone(); guanteDer.position.x = 0.35; piloto.add(guanteDer);
 
-// Arnés negro
-const arnes = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.7, 0.42), matNegro);
-arnes.position.set(0, 1.9, 0); piloto.add(arnes);
+    // CABEZA 3D CON TEXTURA DE CARA
+    const canvasCara = document.createElement('canvas');
+    canvasCara.width = 1024; canvasCara.height = 1024;
+    const ctxF = canvasCara.getContext('2d');
+    ctxF.fillStyle = '#ffcc99'; ctxF.fillRect(0,0,1024,1024);
+    
+    // Ojos grandes
+    ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(320, 512, 100, 0, Math.PI*2); ctxF.arc(704, 512, 100, 0, Math.PI*2); ctxF.fill();
+    ctxF.fillStyle = '#4a2e15'; ctxF.beginPath(); ctxF.arc(320, 512, 60, 0, Math.PI*2); ctxF.arc(704, 512, 60, 0, Math.PI*2); ctxF.fill();
+    ctxF.fillStyle = '#000000'; ctxF.beginPath(); ctxF.arc(320, 512, 30, 0, Math.PI*2); ctxF.arc(704, 512, 30, 0, Math.PI*2); ctxF.fill();
+    ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(290, 470, 20, 0, Math.PI*2); ctxF.arc(674, 470, 20, 0, Math.PI*2); ctxF.fill();
+    
+    // Cejas
+    ctxF.strokeStyle = '#4a2e15'; ctxF.lineWidth = 25; ctxF.lineCap = 'round';
+    ctxF.beginPath(); ctxF.moveTo(200, 340); ctxF.lineTo(400, 380); ctxF.stroke();
+    ctxF.beginPath(); ctxF.moveTo(824, 340); ctxF.lineTo(624, 380); ctxF.stroke();
+    
+    // Sonrisa
+    ctxF.beginPath(); ctxF.arc(512, 680, 100, 0, Math.PI); ctxF.stroke();
+    const texturaCara = new THREE.CanvasTexture(canvasCara);
 
-// Brazos
-const brazoGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 12);
-const brazoIzq = new THREE.Mesh(brazoGeo, matRojo);
-brazoIzq.position.set(-0.35, 2.0, 0.1); brazoIzq.rotation.x = Math.PI/3; piloto.add(brazoIzq);
-const brazoDer = brazoIzq.clone(); brazoDer.position.x = 0.35; piloto.add(brazoDer);
+    // Esfera de la cabeza
+    const cabezaGeo = new THREE.SphereGeometry(0.32, 64, 64);
+    const uvs = cabezaGeo.attributes.uv;
+    // Ajustar textura para que la cara esté al frente
+    for (let i = 0; i < uvs.count; i++) {
+        uvs.setX(i, uvs.getX(i) * 0.5 + 0.25);
+    }
+    const cabezaMat = new THREE.MeshStandardMaterial({ map: texturaCara, roughness: 0.4, metalness: 0.1 });
+    const cabeza = new THREE.Mesh(cabezaGeo, cabezaMat);
+    cabeza.position.set(0, 2.45, 0.05); 
+    cabeza.castShadow = true;
+    piloto.add(cabeza);
 
-// Guantes
-const guanteGeo = new THREE.SphereGeometry(0.1, 16, 16);
-const guanteIzq = new THREE.Mesh(guanteGeo, matNegro); guanteIzq.position.set(-0.35, 1.8, 0.4); piloto.add(guanteIzq);
-const guanteDer = guanteIzq.clone(); guanteDer.position.x = 0.35; piloto.add(guanteDer);
+    // Casco Rojo (Semiesfera trasera)
+    const cascoMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.7, roughness: 0.1 });
+    const cascoGeo = new THREE.SphereGeometry(0.36, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.65);
+    const casco = new THREE.Mesh(cascoGeo, cascoMat);
+    casco.position.set(0, 2.45, 0);
+    casco.rotation.x = -0.15;
+    casco.castShadow = true;
+    piloto.add(casco);
 
-// --- CARA Y CASCO FOTORREALISTA ---
-// Canvas de alta resolución (1024x1024)
-const canvasCara = document.createElement('canvas');
-canvasCara.width = 1024; canvasCara.height = 1024;
-const ctxF = canvasCara.getContext('2d');
-ctxF.fillStyle = '#ffcc99'; ctxF.fillRect(0,0,1024,1024);
+    // Franja blanca
+    const franjaCasco = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.7, 0.7), matBlanco);
+    franjaCasco.position.set(0, 2.6, -0.05); piloto.add(franjaCasco);
 
-// Ojos grandes (estilo anime 3D)
-ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(320, 512, 100, 0, Math.PI*2); ctxF.arc(704, 512, 100, 0, Math.PI*2); ctxF.fill();
-ctxF.fillStyle = '#4a2e15'; ctxF.beginPath(); ctxF.arc(320, 512, 60, 0, Math.PI*2); ctxF.arc(704, 512, 60, 0, Math.PI*2); ctxF.fill();
-ctxF.fillStyle = '#000000'; ctxF.beginPath(); ctxF.arc(320, 512, 30, 0, Math.PI*2); ctxF.arc(704, 512, 30, 0, Math.PI*2); ctxF.fill();
-// Brillo
-ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(290, 470, 20, 0, Math.PI*2); ctxF.arc(674, 470, 20, 0, Math.PI*2); ctxF.fill();
+    // Gafas
+    const gafas = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.06, 8, 16, Math.PI), matNegro);
+    gafas.position.set(0, 2.7, 0.15); gafas.rotation.x = -Math.PI/6; piloto.add(gafas);
 
-// Cejas (enojadas)
-ctxF.strokeStyle = '#4a2e15'; ctxF.lineWidth = 25; ctxF.lineCap = 'round';
-ctxF.beginPath(); ctxF.moveTo(200, 340); ctxF.lineTo(400, 380); ctxF.stroke();
-ctxF.beginPath(); ctxF.moveTo(824, 340); ctxF.lineTo(624, 380); ctxF.stroke();
+    coche.add(piloto);
 
-// Sonrisa
-ctxF.beginPath(); ctxF.arc(512, 680, 100, 0, Math.PI); ctxF.stroke();
-
-const texturaCara = new THREE.CanvasTexture(canvasCara);
-
-// Cabeza esférica con la textura (esto hace que la cara se vea 3D y no plana)
-const cabezaGeo = new THREE.SphereGeometry(0.32, 64, 64);
-// Ajustamos el mapeo UV para que la cara quede al frente
-const uvs = cabezaGeo.attributes.uv;
-for (let i = 0; i < uvs.count; i++) {
-    uvs.setX(i, uvs.getX(i) * 0.5 + 0.25); // Centrar la textura
-}
-const cabezaMat = new THREE.MeshStandardMaterial({ map: texturaCara, roughness: 0.4, metalness: 0.1 });
-const cabeza = new THREE.Mesh(cabezaGeo, cabezaMat);
-cabeza.position.set(0, 2.45, 0.05); 
-cabeza.castShadow = true;
-piloto.add(cabeza);
-
-// Casco 3D (Esfera cortada)
-const cascoMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.7, roughness: 0.1 });
-const cascoGeo = new THREE.SphereGeometry(0.38, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.7);
-const casco = new THREE.Mesh(cascoGeo, cascoMat);
-casco.position.set(0, 2.45, 0);
-casco.rotation.x = -0.15;
-casco.castShadow = true;
-piloto.add(casco);
-
-// Franja blanca del casco
-const franjaCasco = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.7, 0.7), matBlanco);
-franjaCasco.position.set(0, 2.6, -0.05); piloto.add(franjaCasco);
-
-// Gafas oscuras encima
-const gafas = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.06, 8, 16, Math.PI), matNegro);
-gafas.position.set(0, 2.7, 0.15); gafas.rotation.x = -Math.PI/6; piloto.add(gafas);
-
-coche.add(piloto);
-
-                // 8. LLANTAS COROÑOSAS (Tacos diagonales reales)
+    // 8. LLANTAS OFF-ROAD (TACOS INCRUSTADOS)
     const matGoma = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.95 });
     const matRin = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.8, roughness: 0.2 });
     
-    const posRuedas = [[-1.2, 0.9, 1.2], [1.2, 0.9, 1.2], [-1.2, 0.9, -1.2], [1.2, 0.9, -1.2]];
+    const posRuedas = [[-1.2, 0.8, 1.2], [1.2, 0.8, 1.2], [-1.2, 0.8, -1.2], [1.2, 0.8, -1.2]];
     posRuedas.forEach(pos => {
         const ruedaG = new THREE.Group();
         
@@ -318,32 +303,34 @@ coche.add(piloto);
         const llanta = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.7, 32), matGoma);
         llanta.rotation.z = Math.PI / 2; llanta.castShadow = true; ruedaG.add(llanta);
         
-        // Rin Rojo
+        // Rin central
         const rin = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.72, 32), matRin);
         rin.rotation.z = Math.PI / 2; ruedaG.add(rin);
-
-        // Tapacubos
         const tapacubos = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.75, 16), matCromo);
         tapacubos.rotation.z = Math.PI / 2; ruedaG.add(tapacubos);
         
-        // TACOS COROÑOSOS (Bloques diagonales incrustados)
-        const numTacos = 24;
+        // TACOS COROÑOSOS (Pegados a la superficie de la llanta)
+        const numTacos = 16;
         for(let t=0; t<numTacos; t++){
             const angulo = (t / numTacos) * Math.PI * 2;
-            // Taco en forma de cuña
-            const tacoGeo = new THREE.BoxGeometry(0.15, 0.25, 0.75);
+            
+            // Caja que simula el taco de goma
+            const tacoGeo = new THREE.BoxGeometry(0.15, 0.2, 0.72);
             const taco = new THREE.Mesh(tacoGeo, matGoma);
             
-            // Posicionar en el borde de la llanta
+            // Se coloca justo en el borde de la llanta (radio 0.8)
             taco.position.set(Math.cos(angulo) * 0.8, Math.sin(angulo) * 0.8, 0);
-            
-            // Rotar para que apunte hacia afuera
             taco.rotation.z = angulo;
             
-            // Inclinar el taco para dar efecto de "diente de sierra" (diagonal)
-            taco.rotation.x = Math.PI / 6; 
-            
             ruedaG.add(taco);
+            
+            // Taco lateral para hacerlo más ancho
+            if(t % 2 === 0){
+                const tacoLat = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.72), matGoma);
+                tacoLat.position.set(Math.cos(angulo) * 0.85, Math.sin(angulo) * 0.85, 0);
+                tacoLat.rotation.z = angulo;
+                ruedaG.add(tacoLat);
+            }
         }
 
         ruedaG.position.set(pos[0], pos[1], pos[2]);
@@ -353,23 +340,25 @@ coche.add(piloto);
     scene.add(coche);
         }
                 function crearParticulas() {
+            // Llamas de Nitro (Azul)
             const geoFuego = new THREE.BufferGeometry();
             const posF = new Float32Array(200 * 3);
             const colF = new THREE.Float32BufferAttribute(new Float32Array(200 * 3), 3);
             for(let i=0; i<200*3; i+=3){
                 posF[i] = 0; posF[i+1] = -10; posF[i+2] = 0;
-                colF.setXYZ(i/3, Math.random() * 0.5, Math.random() * 0.5 + 0.5, 1.0); 
+                colF.setXYZ(i/3, Math.random() * 0.2, Math.random() * 0.6 + 0.4, 1.0); 
             }
             geoFuego.setAttribute('position', new THREE.BufferAttribute(posF, 3));
             geoFuego.setAttribute('color', colF);
             fuegoEscape = new THREE.Points(geoFuego, new THREE.PointsMaterial({ size: 0.6, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
             scene.add(fuegoEscape);
 
+            // Polvo (Marrón)
             const geoPolvo = new THREE.BufferGeometry();
-            const posP = new Float32Array(150 * 3);
-            for(let i=0; i<150*3; i+=3){ posP[i] = 0; posP[i+1] = -10; posP[i+2] = 0; }
+            const posP = new Float32Array(100 * 3);
+            for(let i=0; i<100*3; i+=3){ posP[i] = 0; posP[i+1] = -10; posP[i+2] = 0; }
             geoPolvo.setAttribute('position', new THREE.BufferAttribute(posP, 3));
-            particulasPolvo = new THREE.Points(geoPolvo, new THREE.PointsMaterial({ size: 1.0, color: 0xc9a370, transparent: true, opacity: 0.6, depthWrite: false }));
+            particulasPolvo = new THREE.Points(geoPolvo, new THREE.PointsMaterial({ size: 1.0, color: 0xd1ab70, transparent: true, opacity: 0.5, depthWrite: false }));
             scene.add(particulasPolvo);
         }
 
@@ -404,8 +393,8 @@ coche.add(piloto);
                 for (let i = 0; i < pos.length; i += 3) {
                     if (pos[i+1] < 0) {
                         pos[i] = coche.position.x + (Math.random() > 0.5 ? 0.2 : -0.2); 
-                        pos[i+1] = 1.1; 
-                        pos[i+2] = coche.position.z - 2.2; 
+                        pos[i+1] = 1.0; 
+                        pos[i+2] = coche.position.z - 2.0; 
                         break;
                     }
                 }
@@ -457,13 +446,16 @@ coche.add(piloto);
                 coche.position.z += movimientoZ;
                 coche.position.x -= movimientoX;
 
+                // Suspensión
                 coche.position.y = Math.sin(tiempoGlobal * 25) * 0.03;
                 coche.rotation.z = Math.sin(tiempoGlobal * 15) * 0.01;
 
+                // Rotación de ruedas
                 ruedas.forEach(r => r.children[0].rotation.x += velocidad * delta * 1.5);
                 if (ruedas.length >= 2) { ruedas[0].rotation.y = direccion * 0.5; ruedas[1].rotation.y = direccion * 0.5; }
 
-                const offsetCamara = new THREE.Vector3(0, 4.5, -9.5);
+                // Cámara
+                const offsetCamara = new THREE.Vector3(0, 4.5, -9.0);
                 offsetCamara.applyAxisAngle(new THREE.Vector3(0, 1, 0), coche.rotation.y);
                 const targetCamara = new THREE.Vector3().copy(coche.position).add(offsetCamara);
                 camera.position.lerp(targetCamara, 0.1);
@@ -480,6 +472,5 @@ coche.add(piloto);
     </script>
 </body>
 </html>
-        
 
         
