@@ -2,255 +2,321 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beach Buggy - Parte 1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Beach Buggy - Unificado Pro</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Arial Black', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
+        
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Luckiest Guy', cursive; user-select: none; }
         canvas { display: block; }
+
+        /* --- HUD SUPERIOR --- */
+        #hud-top { position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; pointer-events: none; }
+        .texto-hud { color: white; font-size: 24px; -webkit-text-stroke: 2px black; text-shadow: 3px 3px 0 #000; letter-spacing: 2px;}
         
-        /* INTERFAZ (HUD) */
-        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; pointer-events: none; }
-        .panel { background: rgba(0,0,0,0.5); color: white; padding: 10px 20px; border-radius: 10px; border: 3px solid white; text-shadow: 2px 2px 0 #000; }
+        /* Barra de progreso */
+        #barra-progreso { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 40%; height: 20px; background: rgba(0,0,0,0.5); border: 3px solid #fff; border-radius: 10px; display: flex; align-items: center; }
+        #barra-relleno { height: 100%; width: 20%; background: #00aaff; border-radius: 5px; }
         
-        /* CONTROLES TÁCTILES ESTILO 3D */
-        #controles { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; }
-        .btn-grupo { display: flex; gap: 10px; }
-        .btn {
-            width: 80px; height: 80px; border-radius: 20px; border: 4px solid; color: white;
-            font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center;
-            user-select: none; touch-action: manipulation; text-shadow: 1px 1px 0 #000;
+        /* Botones Metálicos Inferiores */
+        #controles { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; box-sizing: border-box; }
+        .panel-metal { 
+            background: linear-gradient(to bottom, #b0b0b0, #707070); 
+            border: 4px solid #333; border-radius: 15px; padding: 10px; 
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.5), 0 8px 0 #222;
+            display: flex; gap: 10px;
         }
-        .btn-izq { background-color: #d3c5b5; border-color: #a89b8c; box-shadow: 0 6px 0 #8c7f73; }
-        .btn-freno { background-color: #f05a28; border-color: #b83d15; box-shadow: 0 6px 0 #8c2e10; }
-        .btn-gas { background-color: #4CAF50; border-color: #2E7D32; box-shadow: 0 6px 0 #1B5E20; }
-        .btn:active { box-shadow: 0 2px 0; transform: translateY(4px); }
+        .btn { 
+            width: 60px; height: 60px; border-radius: 10px; background: radial-gradient(circle, #888, #444);
+            border: 2px solid #222; box-shadow: inset 0 2px 5px rgba(255,255,255,0.3);
+            color: white; font-size: 30px; display: flex; justify-content: center; align-items: center;
+        }
+        .btn:active { box-shadow: inset 0 5px 10px rgba(0,0,0,0.8); transform: translateY(4px); }
+        
+        /* Ítems laterales */
+        .item-slot { position: absolute; top: 100px; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; background: radial-gradient(circle, #aaffff, #0088ff); box-shadow: 0 0 20px #00aaff; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; text-shadow: 2px 2px 0 #000; }
+        #item-izq { left: 20px; }
+        #item-der { right: 20px; }
     </style>
 </head>
 <body>
 
-    <!-- Interfaz de Usuario -->
-    <div id="hud">
-        <div class="panel">PUESTO 1/6</div>
-        <div class="panel">VUELTA 1/1</div>
+    <div id="hud-top">
+        <div class="texto-hud">PUESTO 6/6</div>
+        <div id="barra-progreso"><div id="barra-relleno"></div></div>
+        <div class="texto-hud">VUELTA 1/1</div>
     </div>
+
+    <div id="item-izq" class="item-slot">🔥</div>
+    <div id="item-der" class="item-slot">🧪</div>
 
     <div id="controles">
-        <div class="btn-grupo">
-            <div class="btn btn-izq">◀</div>
-            <div class="btn btn-izq">▶</div>
+        <div class="panel-metal">
+            <div class="btn">◀</div>
+            <div class="btn">▶</div>
         </div>
-        <div class="btn-grupo">
-            <div class="btn btn-freno">FRENO</div>
-            <div class="btn btn-gas">GAS</div>
+        <div class="panel-metal">
+            <div class="btn" style="font-size:16px; width:70px; background:radial-gradient(circle, #ff6666, #aa0000);">FRENO</div>
+            <div class="btn" style="font-size:16px; width:70px; background:radial-gradient(circle, #66ff66, #00aa00);">GAS</div>
         </div>
     </div>
 
-    <!-- Three.js -->
+    <!-- Motor Gráfico -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
+        // --- VARIABLES GLOBALES ---
         let scene, camera, renderer, reloj;
-        // (Las variables del coche y polvo se usarán en la Parte 2)
+        let coche, ruedas = [], fuegoEscape;
+        let velocidad = 0;
+        let acelerando = true; 
 
         function init() {
-            // 1. CONFIGURACIÓN BÁSICA Y NIEBLA
+            // 1. CONFIGURACIÓN DEL RENDERIZADOR (Calidad Pro)
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Mejora de color y luz (Tone Mapping)
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1; 
+            renderer.outputEncoding = THREE.sRGBEncoding; 
+            
+            document.body.appendChild(renderer.domElement);
+
+            // 2. ESCENA Y CÁMARA
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87CEEB);
-            scene.fog = new THREE.Fog(0x87CEEB, 40, 150); 
+            scene.fog = new THREE.FogExp2(0x87CEEB, 0.005);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 8, -12);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true; // ACTIVAR SOMBRAS
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            document.body.appendChild(renderer.domElement);
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 6, -10);
 
             reloj = new THREE.Clock();
 
-            // 2. LUCES (Sol y Luz Ambiental)
-            const sol = new THREE.DirectionalLight(0xfff5e6, 1.5);
-            sol.position.set(30, 40, 20);
+            // 3. LUCES
+            const sol = new THREE.DirectionalLight(0xfff5e6, 2.5);
+            sol.position.set(50, 80, -50);
             sol.castShadow = true;
             sol.shadow.mapSize.width = 2048;
             sol.shadow.mapSize.height = 2048;
-            sol.shadow.camera.near = 0.5;
-            sol.shadow.camera.far = 150;
-            sol.shadow.camera.left = -50;
-            sol.shadow.camera.right = 50;
-            sol.shadow.camera.top = 50;
-            sol.shadow.camera.bottom = -50;
+            sol.shadow.camera.left = -100;
+            sol.shadow.camera.right = 100;
+            sol.shadow.camera.top = 100;
+            sol.shadow.camera.bottom = -100;
             scene.add(sol);
 
-            const ambiente = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+            const ambiente = new THREE.HemisphereLight(0xffffff, 0x44aa44, 1.2);
             scene.add(ambiente);
+                        // 4. CREAR ELEMENTOS
+            crearEntorno(); 
+            crearCoche();   
+            crearFuegoEscape(); 
 
-            // 3. CREAR PAISAJE
-            crearEntorno();
-            
-            // (La Parte 2 se encargará de llamar a crearCoche() y animar)
+            window.addEventListener('resize', onWindowResize);
         }
 
         function crearEntorno() {
-            // --- SUELO DE ARENA CON TEXTURA ---
+            // --- SUELO CON CAMINO ---
             const canvas = document.createElement('canvas');
-            canvas.width = 512; canvas.height = 512;
+            canvas.width = 1024; canvas.height = 1024;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#d9b382'; ctx.fillRect(0, 0, 512, 512);
-            for (let i = 0; i < 10000; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? '#c49a66' : '#ebd1a8';
-                ctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
+            
+            ctx.fillStyle = '#e3c28d'; ctx.fillRect(0, 0, 1024, 1024); 
+            for (let i = 0; i < 50000; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#d1ab70' : '#f0d5ab';
+                ctx.fillRect(Math.random() * 1024, Math.random() * 1024, 2, 2);
             }
-            const texturaArena = new THREE.CanvasTexture(canvas);
-            texturaArena.wrapS = THREE.RepeatWrapping;
-            texturaArena.wrapT = THREE.RepeatWrapping;
-            texturaArena.repeat.set(50, 50);
 
-            const geoSuelo = new THREE.PlaneGeometry(500, 500);
-            const matSuelo = new THREE.MeshStandardMaterial({ map: texturaArena, roughness: 1 });
+            // Camino central
+            ctx.fillStyle = '#b38c58';
+            ctx.beginPath();
+            ctx.moveTo(412, 0); ctx.lineTo(612, 0);
+            ctx.quadraticCurveTo(700, 512, 600, 1024);
+            ctx.lineTo(424, 1024);
+            ctx.quadraticCurveTo(324, 512, 412, 0);
+            ctx.fill();
+            
+            for (let i = 0; i < 2000; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#9e7643' : '#c9a370';
+                ctx.fillRect(400 + Math.random() * 200, Math.random() * 1024, 4, 4);
+            }
+
+            const texturaSuelo = new THREE.CanvasTexture(canvas);
+            texturaSuelo.wrapS = THREE.RepeatWrapping;
+            texturaSuelo.wrapT = THREE.RepeatWrapping;
+            texturaSuelo.repeat.set(10, 10);
+
+            const geoSuelo = new THREE.PlaneGeometry(1000, 1000);
+            const matSuelo = new THREE.MeshStandardMaterial({ map: texturaSuelo, roughness: 1 });
             const suelo = new THREE.Mesh(geoSuelo, matSuelo);
             suelo.rotation.x = -Math.PI / 2;
-            suelo.receiveShadow = true; 
+            suelo.receiveShadow = true;
             scene.add(suelo);
 
             // --- AGUA ---
-            const geoAgua = new THREE.PlaneGeometry(1000, 1000);
-            const matAgua = new THREE.MeshStandardMaterial({ color: 0x0077be, transparent: true, opacity: 0.8, roughness: 0.1, metalness: 0.5 });
-            const agua = new THREE.Mesh(geoAgua, matAgua);
-            agua.rotation.x = -Math.PI / 2;
-            agua.position.y = -0.5;
-            agua.position.x = 50;
-            scene.add(agua);
+            const geoAgua = new THREE.PlaneGeometry(400, 1000);
+            const matAgua = new THREE.MeshStandardMaterial({ color: 0x0088cc, transparent: true, opacity: 0.9, roughness: 0.1, metalness: 0.3 });
+            const aguaIzq = new THREE.Mesh(geoAgua, matAgua);
+            aguaIzq.rotation.x = -Math.PI / 2;
+            aguaIzq.position.set(-300, -0.2, 0);
+            scene.add(aguaIzq);
+            const aguaDer = aguaIzq.clone();
+            aguaDer.position.x = 300;
+            scene.add(aguaDer);
 
-            // --- ROCAS (Montañas) ---
-            const geoRoca = new THREE.DodecahedronGeometry(10, 0);
-            const matRoca = new THREE.MeshStandardMaterial({ color: 0x6b705c, flatShading: true });
-            for(let i=0; i<10; i++) {
-                const roca = new THREE.Mesh(geoRoca, matRoca);
-                roca.position.set((Math.random() - 0.5) * 100, 5, 60 + Math.random() * 20);
+            // --- MONTAÑAS Y PALMERAS ---
+            const matRoca = new THREE.MeshStandardMaterial({ color: 0x7a8471, flatShading: true, roughness: 0.9 });
+            const matMusgo = new THREE.MeshStandardMaterial({ color: 0x4a5d23, flatShading: true, roughness: 0.9 });
+            
+            for(let i=0; i<20; i++) {
+                const esIzq = i % 2 === 0;
+                const geoRoca = new THREE.DodecahedronGeometry(20 + Math.random() * 20, 1);
+                const roca = new THREE.Mesh(geoRoca, Math.random() > 0.5 ? matRoca : matMusgo);
+                roca.position.set(esIzq ? -80 - Math.random()*50 : 80 + Math.random()*50, 10, (Math.random() - 0.5) * 400);
                 roca.rotation.set(Math.random(), Math.random(), Math.random());
-                roca.scale.set(1 + Math.random(), 1 + Math.random(), 1 + Math.random());
                 roca.castShadow = true;
                 roca.receiveShadow = true;
                 scene.add(roca);
             }
 
-            // --- PALMERAS ---
             const matTronco = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
-            const matHoja = new THREE.MeshStandardMaterial({ color: 0x2e8b57, flatShading: true });
+            const matHoja = new THREE.MeshStandardMaterial({ color: 0x228b22, flatShading: true, side: THREE.DoubleSide });
             
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 30; i++) {
                 const palmera = new THREE.Group();
-                
-                const tronco = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 5), matTronco);
-                tronco.position.y = 2.5;
+                const puntos = [];
+                for(let j=0; j<=4; j++) puntos.push(new THREE.Vector2(0.5 - j*0.1, j*2));
+                const tronco = new THREE.Mesh(new THREE.LatheGeometry(puntos, 8), matTronco);
                 tronco.castShadow = true;
                 palmera.add(tronco);
 
-                for (let j = 0; j < 6; j++) {
-                    const hoja = new THREE.Mesh(new THREE.ConeGeometry(1, 4, 4), matHoja);
-                    hoja.position.y = 5;
-                    hoja.rotation.z = Math.PI / 3;
-                    hoja.rotation.y = (Math.PI * 2 / 6) * j;
-                    hoja.position.x = Math.sin((Math.PI * 2 / 6) * j) * 1.5;
-                    hoja.position.z = Math.cos((Math.PI * 2 / 6) * j) * 1.5;
-                    hoja.rotation.x = Math.PI / 4;
+                for (let j = 0; j < 8; j++) {
+                    const hoja = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 6), matHoja);
+                    hoja.position.y = 8;
+                    hoja.rotation.x = -Math.PI / 3;
+                    hoja.rotation.y = (Math.PI * 2 / 8) * j;
+                    hoja.position.x = Math.sin((Math.PI * 2 / 8) * j) * 2;
+                    hoja.position.z = Math.cos((Math.PI * 2 / 8) * j) * 2;
                     hoja.castShadow = true;
                     palmera.add(hoja);
                 }
                 
-                palmera.position.set((Math.random() - 0.5) * 100, 0, (Math.random() - 0.5) * 100);
+                const lado = Math.random() > 0.5 ? 1 : -1;
+                palmera.position.set(lado * (20 + Math.random() * 40), 0, (Math.random() - 0.5) * 200);
                 scene.add(palmera);
             }
         }
 
-                // --- AQUÍ EMPIEZA LA PARTE 2 ---
-        let coche, ruedas = [], polvo;
-        let velocidad = 0;
-
         function crearCoche() {
             coche = new THREE.Group();
 
-            // Carrocería
-            const geoCuerpo = new THREE.BoxGeometry(3, 1, 4.5);
-            const matCuerpo = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.3, metalness: 0.2 });
-            const cuerpo = new THREE.Mesh(geoCuerpo, matCuerpo);
-            cuerpo.position.y = 1;
-            cuerpo.castShadow = true;
-            coche.add(cuerpo);
+            const chasis = new THREE.Mesh(
+                new THREE.BoxGeometry(2.5, 0.8, 4),
+                new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.2, metalness: 0.3 })
+            );
+            chasis.position.y = 1.2;
+            chasis.castShadow = true;
+            coche.add(chasis);
 
-            // Cabina
-            const geoCabina = new THREE.BoxGeometry(2, 1, 2);
-            const matCabina = new THREE.MeshStandardMaterial({ color: 0x222222 });
-            const cabina = new THREE.Mesh(geoCabina, matCabina);
-            cabina.position.set(0, 2, 0.5);
-            cabina.castShadow = true;
-            coche.add(cabina);
+            const matTubo = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.2 });
+            const crearTubo = (x, y, z, sx, sy, sz) => {
+                const tubo = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), matTubo);
+                tubo.position.set(x, y, z);
+                tubo.castShadow = true;
+                coche.add(tubo);
+            };
+            crearTubo(-1.1, 2.2, -0.5, 0.1, 2, 0.1);
+            crearTubo(1.1, 2.2, -0.5, 0.1, 2, 0.1);
+            crearTubo(-1.1, 3.1, -0.5, 2.3, 0.1, 0.1);
+            crearTubo(-1.1, 2.6, 0.8, 0.1, 1, 0.1);
 
-            // Ruedas
-            const geoRueda = new THREE.CylinderGeometry(0.8, 0.8, 0.6, 16);
-            const matRueda = new THREE.MeshStandardMaterial({ color: 0x111111 });
+            const motor = new THREE.Mesh(
+                new THREE.BoxGeometry(1.5, 0.8, 1.2),
+                new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.9, roughness: 0.5 })
+            );
+            motor.position.set(0, 1.5, -1.6);
+            motor.castShadow = true;
+            coche.add(motor);
+
+            const geoEscape = new THREE.CylinderGeometry(0.15, 0.15, 0.8, 8);
+            const escapeIzq = new THREE.Mesh(geoEscape, matTubo);
+            escapeIzq.rotation.x = Math.PI / 2;
+            escapeIzq.position.set(-0.5, 1.2, -2.2);
+            coche.add(escapeIzq);
+            const escapeDer = escapeIzq.clone();
+            escapeDer.position.x = 0.5;
+            coche.add(escapeDer);
+
+            const geoRueda = new THREE.CylinderGeometry(0.9, 0.9, 0.8, 16);
+            const matRueda = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+            const matRin = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 });
             
-            const posicionesRuedas = [
-                [-1.6, 0.8, 1.5], [1.6, 0.8, 1.5], // Delanteras
-                [-1.6, 0.8, -1.5], [1.6, 0.8, -1.5] // Traseras
+            const posiciones = [
+                [-1.5, 0.9, 1.2], [1.5, 0.9, 1.2],
+                [-1.5, 0.9, -1.2], [1.5, 0.9, -1.2]
             ];
 
-            posicionesRuedas.forEach(pos => {
-                const rueda = new THREE.Mesh(geoRueda, matRueda);
-                rueda.rotation.z = Math.PI / 2;
-                rueda.position.set(pos[0], pos[1], pos[2]);
-                rueda.castShadow = true;
-                coche.add(rueda);
-                ruedas.push(rueda);
+            posiciones.forEach(pos => {
+                const ruedaGroup = new THREE.Group();
+                const neumatico = new THREE.Mesh(geoRueda, matRueda);
+                neumatico.rotation.z = Math.PI / 2;
+                neumatico.castShadow = true;
+                ruedaGroup.add(neumatico);
+                const rin = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.82, 8), matRin);
+                rin.rotation.z = Math.PI / 2;
+                ruedaGroup.add(rin);
+                ruedaGroup.position.set(pos[0], pos[1], pos[2]);
+                coche.add(ruedaGroup);
+                ruedas.push(ruedaGroup);
             });
 
             scene.add(coche);
         }
 
-        function crearPolvo() {
-            const cantidad = 50;
+        function crearFuegoEscape() {
+            const cantidad = 100;
             const geo = new THREE.BufferGeometry();
             const posiciones = new Float32Array(cantidad * 3);
+            const colores = new Float32Array(cantidad * 3);
             
             for(let i=0; i<cantidad*3; i+=3){
-                posiciones[i] = 0;
-                posiciones[i+1] = -10;
-                posiciones[i+2] = 0;
+                posiciones[i] = 0; posiciones[i+1] = -10; posiciones[i+2] = 0;
+                colores[i] = 1.0; colores[i+1] = Math.random() * 0.5 + 0.5; colores[i+2] = 0;
             }
             
             geo.setAttribute('position', new THREE.BufferAttribute(posiciones, 3));
+            geo.setAttribute('color', new THREE.BufferAttribute(colores, 3));
             
             const mat = new THREE.PointsMaterial({
-                color: 0xe0c9a6,
-                size: 0.8,
-                transparent: true,
-                opacity: 0.6,
-                depthWrite: false
+                size: 0.6, vertexColors: true, transparent: true, opacity: 0.8, depthWrite: false,
+                blending: THREE.AdditiveBlending
             });
             
-            polvo = new THREE.Points(geo, mat);
-            scene.add(polvo);
+            fuegoEscape = new THREE.Points(geo, mat);
+            scene.add(fuegoEscape);
         }
 
-        function actualizarPolvo() {
-            if (velocidad > 0.05) {
-                const posiciones = polvo.geometry.attributes.position.array;
+        function actualizarFuego(delta) {
+            if (acelerando && velocidad > 0) {
+                const posiciones = fuegoEscape.geometry.attributes.position.array;
                 for (let i = 0; i < posiciones.length; i += 3) {
                     if (posiciones[i+1] < 0) {
-                        posiciones[i] = coche.position.x + (Math.random() - 0.5) * 1.5;
-                        posiciones[i+1] = 0.2;
+                        posiciones[i] = coche.position.x + (Math.random() > 0.5 ? 0.5 : -0.5);
+                        posiciones[i+1] = 1.2;
                         posiciones[i+2] = coche.position.z - 2.5; 
                         break;
                     }
                 }
                 for (let i = 1; i < posiciones.length; i += 3) {
                     if (posiciones[i] > 0) {
-                        posiciones[i] -= 0.05;
+                        posiciones[i] += delta * 2;
+                        posiciones[i+1] -= delta * 5;
                     }
                 }
-                polvo.geometry.attributes.position.needsUpdate = true;
+                fuegoEscape.geometry.attributes.position.needsUpdate = true;
             }
         }
 
@@ -262,36 +328,32 @@
 
         function animate() {
             requestAnimationFrame(animate);
-
             const delta = reloj.getDelta();
 
-            // Movimiento automático para probar las físicas
-            velocidad = 15; 
+            if (acelerando) {
+                velocidad = THREE.MathUtils.lerp(velocidad, 25, delta * 2);
+            } else {
+                velocidad = THREE.MathUtils.lerp(velocidad, 0, delta * 3);
+            }
+
             coche.position.z += velocidad * delta;
             
-            // Rotar ruedas
-            ruedas.forEach(r => r.rotation.x += velocidad * delta);
+            ruedas.forEach(r => r.children[0].rotation.x += velocidad * delta * 1.5);
 
-            // Seguir al coche con la cámara
-            camera.position.x = coche.position.x;
-            camera.position.z = coche.position.z - 12;
-            camera.lookAt(coche.position.x, coche.position.y + 1, coche.position.z + 5);
+            camera.position.x = THREE.MathUtils.lerp(camera.position.x, coche.position.x, 0.1);
+            camera.position.z = coche.position.z - 9;
+            camera.position.y = 5;
+            camera.lookAt(coche.position.x, coche.position.y + 1.5, coche.position.z + 10);
 
-            actualizarPolvo();
+            actualizarFuego(delta);
 
             renderer.render(scene, camera);
         }
 
-        // --- ARRANQUE FINAL ---
-        // Se llama a crearCoche y crearPolvo aquí, después de definirlos
-        window.addEventListener('resize', onWindowResize);
-        crearCoche(); 
-        crearPolvo();
-        animate(); 
-        init(); // Inicializa el escenario de la Parte 1
-
+        // --- ARRANQUE ---
+        init();
+        animate();
     </script>
 </body>
 </html>
-
-     
+        
