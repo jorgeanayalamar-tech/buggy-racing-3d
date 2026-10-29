@@ -31,7 +31,6 @@
             display: flex; gap: 10px;
             position: relative;
         }
-        /* Rejilla de puntos (remaches) */
         .panel-metal::before {
             content: ''; position: absolute; bottom: 5px; left: 10px; right: 10px; height: 10px;
             background-image: radial-gradient(#555 30%, transparent 35%); background-size: 10px 10px; background-position: center;
@@ -52,7 +51,6 @@
             box-shadow: 0 0 15px #00aaff, inset 0 0 10px #003366; z-index: 10;
             display: flex; justify-content: center; align-items: center;
         }
-        /* El dibujo del ítem dentro del círculo */
         .item-slot::after {
             content: ''; width: 40px; height: 40px; border-radius: 50%;
             background: radial-gradient(circle, #ffcc00, #ff3300);
@@ -72,7 +70,6 @@
     </div>
 
     <div id="btn-pausa"></div>
-
     <div id="item-izq" class="item-slot"></div>
     <div id="item-der" class="item-slot"></div>
 
@@ -87,7 +84,6 @@
         </div>
     </div>
 
-    <!-- Motor Gráfico -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
@@ -109,7 +105,6 @@
 
             scene = new THREE.Scene();
             
-            // --- CIELO CON DEGRADADO ---
             const canvasCielo = document.createElement('canvas');
             canvasCielo.width = 2; canvasCielo.height = 256;
             const ctxC = canvasCielo.getContext('2d');
@@ -126,7 +121,6 @@
             camera.position.set(0, 6, -10);
             reloj = new THREE.Clock();
 
-            // LUCES
             const sol = new THREE.DirectionalLight(0xfff5e6, 2.5);
             sol.position.set(50, 80, -50);
             sol.castShadow = true;
@@ -140,9 +134,7 @@
 
             const ambiente = new THREE.HemisphereLight(0xffffff, 0x44aa44, 1.2);
             scene.add(ambiente);
-
-                    // 4. CREAR ELEMENTOS
-            crearEntorno(); 
+                        crearEntorno(); 
             crearCoche();   
             crearFuegoEscape(); 
 
@@ -151,7 +143,6 @@
         }
 
         function crearEntorno() {
-            // SUELO
             const canvas = document.createElement('canvas');
             canvas.width = 1024; canvas.height = 1024;
             const ctx = canvas.getContext('2d');
@@ -160,7 +151,6 @@
                 ctx.fillStyle = Math.random() > 0.5 ? '#d1ab70' : '#f0d5ab';
                 ctx.fillRect(Math.random() * 1024, Math.random() * 1024, 2, 2);
             }
-            // Camino central
             ctx.fillStyle = '#b38c58';
             ctx.beginPath();
             ctx.moveTo(412, 0); ctx.lineTo(612, 0);
@@ -181,14 +171,12 @@
             const suelo = new THREE.Mesh(geoSuelo, matSuelo);
             suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; scene.add(suelo);
 
-            // AGUA
             const geoAgua = new THREE.PlaneGeometry(400, 1000);
             const matAgua = new THREE.MeshStandardMaterial({ color: 0x0088cc, transparent: true, opacity: 0.9, roughness: 0.1, metalness: 0.3 });
             const aguaIzq = new THREE.Mesh(geoAgua, matAgua);
             aguaIzq.rotation.x = -Math.PI / 2; aguaIzq.position.set(-300, -0.2, 0); scene.add(aguaIzq);
             const aguaDer = aguaIzq.clone(); aguaDer.position.x = 300; scene.add(aguaDer);
 
-            // MONTAÑAS
             const matRoca = new THREE.MeshStandardMaterial({ color: 0x7a8471, flatShading: true, roughness: 0.9 });
             const matMusgo = new THREE.MeshStandardMaterial({ color: 0x4a5d23, flatShading: true, roughness: 0.9 });
             for(let i=0; i<20; i++) {
@@ -200,7 +188,6 @@
                 roca.castShadow = true; roca.receiveShadow = true; scene.add(roca);
             }
 
-            // PALMERAS
             const matTronco = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
             const matHoja = new THREE.MeshStandardMaterial({ color: 0x228b22, flatShading: true, side: THREE.DoubleSide });
             for (let i = 0; i < 30; i++) {
@@ -222,7 +209,6 @@
                 scene.add(palmera);
             }
 
-            // LETREROS DE MADERA
             const matMadera = new THREE.MeshStandardMaterial({ color: 0xcd853f, roughness: 0.8 });
             const matPoste = new THREE.MeshStandardMaterial({ color: 0x654321 });
             for(let i=0; i<8; i++){
@@ -231,7 +217,6 @@
                 poste.position.y = 1.5; poste.castShadow = true; letrero.add(poste);
                 const tabla = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 0.2), matMadera);
                 tabla.position.y = 2.5; tabla.castShadow = true; letrero.add(tabla);
-                
                 const lado = Math.random() > 0.5 ? 1 : -1;
                 letrero.position.set(lado * 15, 0, (Math.random() - 0.5) * 150);
                 letrero.rotation.y = lado === 1 ? -Math.PI/2 : Math.PI/2;
@@ -242,7 +227,6 @@
         function crearCoche() {
             coche = new THREE.Group();
 
-            // Calcomanía de fuego para el capó trasero
             const canvasDecal = document.createElement('canvas');
             canvasDecal.width = 256; canvasDecal.height = 256;
             const ctxD = canvasDecal.getContext('2d');
@@ -251,20 +235,17 @@
             ctxD.beginPath(); ctxD.moveTo(128, 256); ctxD.lineTo(60, 80); ctxD.lineTo(140, 150); ctxD.lineTo(196, 40); ctxD.lineTo(220, 256); ctxD.fill();
             const decalTex = new THREE.CanvasTexture(canvasDecal);
 
-            // Chasis con la calcomanía
             const chasis = new THREE.Mesh(
                 new THREE.BoxGeometry(2.5, 0.8, 4),
                 new THREE.MeshStandardMaterial({ map: decalTex, roughness: 0.2, metalness: 0.3 })
             );
             chasis.position.y = 1.2; chasis.castShadow = true; coche.add(chasis);
 
-            // EL PILOTO
             const cabeza = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), new THREE.MeshStandardMaterial({color: 0xffcc99}));
             cabeza.position.set(0, 2.3, 0.5); coche.add(cabeza);
             const pelo = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.8, 5), new THREE.MeshStandardMaterial({color: 0xaa0000, flatShading: true}));
             pelo.position.set(0, 2.8, 0.3); coche.add(pelo);
 
-            // Jaula Antivuelco
             const matTubo = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.2 });
             const crearTubo = (x, y, z, sx, sy, sz) => {
                 const tubo = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), matTubo);
@@ -275,7 +256,6 @@
             crearTubo(-1.1, 3.1, -0.5, 2.3, 0.1, 0.1);
             crearTubo(-1.1, 2.6, 0.8, 0.1, 1, 0.1);
 
-            // Motor y Escapes
             const motor = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 1.2), new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.9, roughness: 0.5 }));
             motor.position.set(0, 1.5, -1.6); motor.castShadow = true; coche.add(motor);
 
@@ -284,7 +264,6 @@
             escapeIzq.rotation.x = Math.PI / 2; escapeIzq.position.set(-0.5, 1.2, -2.2); coche.add(escapeIzq);
             const escapeDer = escapeIzq.clone(); escapeDer.position.x = 0.5; coche.add(escapeDer);
 
-            // Ruedas
             const geoRueda = new THREE.CylinderGeometry(0.9, 0.9, 0.8, 16);
             const matRueda = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
             const matRin = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 });
@@ -360,7 +339,6 @@
                     velocidad = THREE.MathUtils.lerp(velocidad, 0, delta * 3);
                 }
 
-                // Balanceo de suspensión
                 const tiempo = Date.now() * 0.005;
                 coche.position.y = Math.sin(tiempo * 5) * 0.05;
                 coche.rotation.z = Math.sin(tiempo * 3) * 0.02;
