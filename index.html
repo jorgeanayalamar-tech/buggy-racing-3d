@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Beach Buggy Pro - Cápsulas Reales</title>
+    <title>Beach Buggy Pro - Render Detallado</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
         body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Luckiest Guy', cursive; user-select: none; }
@@ -40,70 +40,63 @@
         <div class="panel-metal"><div class="btn btn-accion" id="btn-freno">FRENO</div><div class="btn btn-accion" id="btn-gas">GAS</div></div>
     </div>
 
-    <!-- AQUÍ ESTÁ LA SOLUCIÓN: Usamos Three.js r160 (del año 2023) para que CapsuleGeometry funcione -->
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
     <script>
         let scene, camera, renderer, reloj;
         let coche, piloto, ruedas = [], fuegoEscape, particulasPolvo;
         let velocidad = 0, direccion = 0, acelerando = false, frenando = false, tiempoGlobal = 0;
         const VELOCIDAD_MAXIMA = 35, ACELERACION = 15, FRENADO = 25, VELOCIDAD_GIRO = 1.5;
+
         function init() {
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
-    // En r160, esto cambió de nombre a outputColorSpace
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    document.body.appendChild(renderer.domElement);
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1;
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            document.body.appendChild(renderer.domElement);
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB); 
-    scene.fog = new THREE.FogExp2(0x87CEEB, 0.005);
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); 
+            scene.fog = new THREE.FogExp2(0x87CEEB, 0.005);
 
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, -9); 
-    reloj = new THREE.Clock();
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, -9); 
+            reloj = new THREE.Clock();
 
-    // LUCES
-    const sol = new THREE.DirectionalLight(0xfff5e6, 3.0);
-    sol.position.set(40, 60, -30);
-    sol.castShadow = true;
-    sol.shadow.mapSize.width = 2048;
-    sol.shadow.mapSize.height = 2048;
-    sol.shadow.camera.left = -60; sol.shadow.camera.right = 60; sol.shadow.camera.top = 60; sol.shadow.camera.bottom = -60;
-    sol.shadow.bias = -0.0005;
-    scene.add(sol);
+            const sol = new THREE.DirectionalLight(0xfff5e6, 3.0);
+            sol.position.set(40, 60, -30);
+            sol.castShadow = true;
+            sol.shadow.mapSize.width = 2048; sol.shadow.mapSize.height = 2048;
+            sol.shadow.camera.left = -60; sol.shadow.camera.right = 60; sol.shadow.camera.top = 60; sol.shadow.camera.bottom = -60;
+            sol.shadow.bias = -0.0005;
+            scene.add(sol);
 
-    const ambiente = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambiente);
-    const hemisferio = new THREE.HemisphereLight(0xffffff, 0x8b5a2b, 1.5);
-    scene.add(hemisferio);
+            const ambiente = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambiente);
+            const hemisferio = new THREE.HemisphereLight(0xffffff, 0x8b5a2b, 1.2);
+            scene.add(hemisferio);
 
-    // MAPA DE ENTORNO (PMREM) - Ahora sí funcionará de maravilla
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    const envScene = new THREE.Scene();
-    const envCanvas = document.createElement('canvas');
-    envCanvas.width = 512; envCanvas.height = 512;
-    const eCtx = envCanvas.getContext('2d');
-    const eGrad = eCtx.createLinearGradient(0, 0, 0, 512);
-    eGrad.addColorStop(0, '#ffffff'); eGrad.addColorStop(0.5, '#87CEEB'); eGrad.addColorStop(1, '#e3c28d');
-    eCtx.fillStyle = eGrad; eCtx.fillRect(0, 0, 512, 512);
-    const envTexture = new THREE.CanvasTexture(envCanvas);
-    envTexture.mapping = THREE.EquirectangularReflectionMapping;
-    const envMap = pmremGenerator.fromEquirectangular(envTexture).texture;
-    scene.environment = envMap;
+            // Reflejos PBR (Pseudo-Blender)
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            const envCanvas = document.createElement('canvas');
+            envCanvas.width = 512; envCanvas.height = 512;
+            const eCtx = envCanvas.getContext('2d');
+            const eGrad = eCtx.createLinearGradient(0, 0, 0, 512);
+            eGrad.addColorStop(0, '#ffffff'); eGrad.addColorStop(0.5, '#87CEEB'); eGrad.addColorStop(1, '#e3c28d');
+            eCtx.fillStyle = eGrad; eCtx.fillRect(0, 0, 512, 512);
+            const envTexture = new THREE.CanvasTexture(envCanvas);
+            envTexture.mapping = THREE.EquirectangularReflectionMapping;
+            scene.environment = pmremGenerator.fromEquirectangular(envTexture).texture;
 
-    crearEntorno();
-    crearCoche();
-    crearParticulas();
-    configurarControles();
-
-    window.addEventListener('resize', onWindowResize);
-    animate();
+            crearEntorno();
+            crearCocheDetallado();
+            crearParticulas();
+            configurarControles();
+            window.addEventListener('resize', onWindowResize);
+            animate();
         }
         function crearEntorno() {
     const canvas = document.createElement('canvas');
@@ -150,105 +143,191 @@
         palmera.position.set(lado * (30 + Math.random() * 60), 0, (Math.random() - 0.5) * 300); 
         scene.add(palmera);
     }
-}
+        }
 
-function crearCoche() {
+        function crearCocheDetallado() {
     coche = new THREE.Group();
-    const matRojo = new THREE.MeshStandardMaterial({ color: 0xd30000, metalness: 0.6, roughness: 0.2 });
-    const matBlanco = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.3 });
-    const matNegro = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.4 });
-    const matCromo = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 1.0, roughness: 0.1 });
 
-    // AQUÍ ESTÁ LA CÁPSULA QUE PEDISTE (Ahora sí funciona)
+    // MATERIALES PREMIUM
+    const matRojo = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.7, roughness: 0.2 });
+    const matBlanco = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.3 });
+    const matNegro = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.5 });
+    const matCromo = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 1.0, roughness: 0.1 });
+    const matRojoSusp = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.6, roughness: 0.3 });
+
+    // 1. CHASIS PRINCIPAL (Cápsula achatada)
     const cuerpo = new THREE.Mesh(new THREE.CapsuleGeometry(0.9, 2.8, 16, 32), matRojo);
     cuerpo.rotation.x = Math.PI / 2; cuerpo.rotation.z = Math.PI / 2;
     cuerpo.position.set(0, 1.2, 0); cuerpo.scale.set(1.6, 1, 0.7);
     cuerpo.castShadow = true; cuerpo.receiveShadow = true; coche.add(cuerpo);
 
-    const franja = new THREE.Mesh(new THREE.BoxGeometry(2.9, 1.0, 1.2), matBlanco);
-    franja.position.set(0, 1.2, 1.4); coche.add(franja);
+    // 2. FRANJA BLANCA Y CALCOMANÍA "01" (Usando Canvas)
+    const canvasDecal = document.createElement('canvas');
+    canvasDecal.width = 512; canvasDecal.height = 512;
+    const ctxD = canvasDecal.getContext('2d');
+    ctxD.fillStyle = '#cc0000'; ctxD.fillRect(0,0,512,512);
+    // Franjas blancas laterales
+    ctxD.fillStyle = '#ffffff'; ctxD.fillRect(0, 200, 512, 100);
+    // Número "01"
+    ctxD.fillStyle = '#ffffff'; ctxD.font = 'bold 250px Arial'; ctxD.textAlign = 'center'; ctxD.textBaseline = 'middle';
+    ctxD.fillText('01', 256, 256);
+    
+    const texturaDecal = new THREE.CanvasTexture(canvasDecal);
+    const matDecal = new THREE.MeshStandardMaterial({ map: texturaDecal, metalness: 0.4, roughness: 0.3 });
+    
+    const lateralIzq = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 1.4), matDecal);
+    lateralIzq.position.set(-1.25, 1.2, 0); lateralIzq.rotation.y = -Math.PI/2; coche.add(lateralIzq);
+    const lateralDer = lateralIzq.clone(); lateralDer.position.x = 1.25; lateralDer.rotation.y = Math.PI/2; coche.add(lateralDer);
 
+    // 3. JAULA TUBULAR COMPLETA (Antivuelco)
+    const matJaula = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.9, roughness: 0.4 });
     const puntosJaula = [
         new THREE.Vector3(-1.1, 1.5, -1.6), new THREE.Vector3(-1.1, 3.0, -0.8), new THREE.Vector3(-0.9, 3.2, 0.8), new THREE.Vector3(-0.9, 1.8, 1.6),
         new THREE.Vector3(0.9, 1.8, 1.6), new THREE.Vector3(0.9, 3.2, 0.8), new THREE.Vector3(1.1, 3.0, -0.8), new THREE.Vector3(1.1, 1.5, -1.6)
     ];
     const curvaJaula = new THREE.CatmullRomCurve3(puntosJaula);
-    const jaula = new THREE.Mesh(new THREE.TubeGeometry(curvaJaula, 64, 0.1, 12, false), matNegro);
+    const jaula = new THREE.Mesh(new THREE.TubeGeometry(curvaJaula, 64, 0.1, 12, false), matJaula);
     jaula.castShadow = true; coche.add(jaula);
+    
+    // Travesaños de la jaula
+    const tuboTravesaño = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.2, 8), matJaula);
+    tuboTravesaño.rotation.z = Math.PI / 2; tuboTravesaño.position.set(0, 3.2, 0.8); coche.add(tuboTravesaño);
 
-    const motor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 1.2), matNegro);
+    // 4. AMORTIGUADORES VISIBLES (Suspensión roja)
+    const posAmortiguadores = [[-1.2, 0.9, 1.4], [1.2, 0.9, 1.4], [-1.2, 0.9, -1.4], [1.2, 0.9, -1.4]];
+    posAmortiguadores.forEach(pos => {
+        const amort = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.2, 8), matRojoSusp);
+        amort.position.set(pos[0], pos[1]+0.3, pos[2]); coche.add(amort);
+        const muelle = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1.0, 8), matCromo);
+        muelle.position.set(pos[0], pos[1]+0.3, pos[2]); coche.add(muelle);
+    });
+
+    // 5. MOTOR TRASERO Y ESCAPES
+    const motor = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.0, 1.2), matNegro);
     motor.position.set(0, 1.5, -1.8); motor.castShadow = true; coche.add(motor);
+    const detalleMotor = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.4, 1.2), matCromo);
+    detalleMotor.position.set(0, 2.0, -1.8); coche.add(detalleMotor);
 
-    const escapeGeo = new THREE.CylinderGeometry(0.12, 0.12, 1.0, 16);
+    const escapeGeo = new THREE.CylinderGeometry(0.12, 0.12, 1.2, 16);
     const escapeIzq = new THREE.Mesh(escapeGeo, matCromo);
     escapeIzq.rotation.x = Math.PI / 2; escapeIzq.position.set(-0.6, 1.2, -2.4); coche.add(escapeIzq);
     const escapeDer = escapeIzq.clone(); escapeDer.position.x = 0.6; coche.add(escapeDer);
 
-    const matFaros = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.5 });
+    // 6. FAROS DE TECHO (4 luces LED)
+    const matFaros = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.0 });
     for(let i=0; i<4; i++){
-        const faro = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.2, 16), matFaros);
-        faro.rotation.x = Math.PI / 2; faro.position.set(-0.75 + i*0.5, 3.2, 0.8); coche.add(faro);
-        }
+        const faro = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 16), matFaros);
+        faro.rotation.x = Math.PI / 2; faro.position.set(-0.75 + i*0.5, 3.3, 0.8); coche.add(faro);
+        const baseFaro = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.15, 16), matNegro);
+        baseFaro.rotation.x = Math.PI / 2; baseFaro.position.set(-0.75 + i*0.5, 3.3, 0.75); coche.add(baseFaro);
+    }
 
-            piloto = new THREE.Group();
+    // 7. VOLANTE Y ASIENTOS (Visibles a través de la jaula)
+    const asiento = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.5), matNegro);
+    asiento.position.set(0, 1.8, -0.2); coche.add(asiento);
     
-    // Torso también con cápsula
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.5, 8, 16), matRojo);
+    const volante = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.05, 8, 16), matNegro);
+    volante.position.set(0, 2.1, 0.6); volante.rotation.x = -Math.PI/4; coche.add(volante);
+    
+    // 8. PARACHOQUES DELANTERO (Bull Bar)
+    const defensa = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.1, 8, 16, Math.PI), matJaula);
+    defensa.position.set(0, 1.2, 2.1); defensa.rotation.x = Math.PI/2; defensa.rotation.z = Math.PI; coche.add(defensa);
+                // 9. EL PILOTO DETALLADO
+    piloto = new THREE.Group();
+    
+    // Torso del traje
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.4, 8, 16), matRojo);
     torso.position.y = 2.0; torso.castShadow = true; piloto.add(torso);
     
-    const franjaTraje = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.7, 0.72), matBlanco);
+    // Franja blanca del traje y cinturón
+    const franjaTraje = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.75), matBlanco);
     franjaTraje.position.set(0, 2.0, 0); piloto.add(franjaTraje);
+    const cinturon = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.4), matNegro);
+    cinturon.position.set(0, 1.7, 0); piloto.add(cinturon);
     
-    const brazoGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.6, 12);
+    // Brazos
+    const brazoGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 12);
     const brazoIzq = new THREE.Mesh(brazoGeo, matRojo);
     brazoIzq.position.set(-0.4, 2.1, 0.2); brazoIzq.rotation.x = Math.PI/3; piloto.add(brazoIzq);
     const brazoDer = brazoIzq.clone(); brazoDer.position.x = 0.4; piloto.add(brazoDer);
-
-    const casco = new THREE.Mesh(new THREE.SphereGeometry(0.45, 32, 32), matRojo);
-    casco.position.y = 2.6; casco.castShadow = true; piloto.add(casco);
     
-    const visor = new THREE.Mesh(new THREE.SphereGeometry(0.46, 32, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({color: 0x000000, metalness: 0.9, roughness: 0.1}));
-    visor.position.set(0, 2.6, 0.05); visor.rotation.x = Math.PI/3; piloto.add(visor);
+    // Guantes
+    const guanteGeo = new THREE.SphereGeometry(0.12, 16, 16);
+    const guanteIzq = new THREE.Mesh(guanteGeo, matNegro); guanteIzq.position.set(-0.4, 1.85, 0.5); piloto.add(guanteIzq);
+    const guanteDer = guanteIzq.clone(); guanteDer.position.x = 0.4; piloto.add(guanteDer);
 
+    // Casco
+    const casco = new THREE.Mesh(new THREE.SphereGeometry(0.45, 32, 32), matRojo);
+    casco.position.y = 2.5; casco.castShadow = true; piloto.add(casco);
+    
+    // Franja blanca del casco
+    const franjaCasco = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.9, 0.9), matBlanco);
+    franjaCasco.position.set(0, 2.5, 0); piloto.add(franjaCasco);
+
+    // Visor frontal oscuro
+    const visor = new THREE.Mesh(new THREE.SphereGeometry(0.46, 32, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({color: 0x000000, metalness: 1.0, roughness: 0.0}));
+    visor.position.set(0, 2.5, 0.05); visor.rotation.x = Math.PI/3.5; piloto.add(visor);
+
+    // Gafas de sol en la frente (Torus)
+    const gafasGeo = new THREE.TorusGeometry(0.3, 0.08, 8, 16, Math.PI);
+    const gafas = new THREE.Mesh(gafasGeo, matNegro);
+    gafas.position.set(0, 2.8, 0.2); gafas.rotation.x = -Math.PI/6; piloto.add(gafas);
+
+    // CARA (Textura Canvas con ojos grandes y sonrisa)
     const canvasCara = document.createElement('canvas');
     canvasCara.width = 512; canvasCara.height = 512;
     const ctxF = canvasCara.getContext('2d');
-    ctxF.fillStyle = '#ffcc99'; ctxF.fillRect(0,0,512,512);
-    ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(160, 256, 50, 0, Math.PI*2); ctxF.arc(352, 256, 50, 0, Math.PI*2); ctxF.fill();
-    ctxF.fillStyle = '#4a2e15'; ctxF.beginPath(); ctxF.arc(160, 256, 30, 0, Math.PI*2); ctxF.arc(352, 256, 30, 0, Math.PI*2); ctxF.fill();
-    ctxF.fillStyle = '#000000'; ctxF.beginPath(); ctxF.arc(160, 256, 15, 0, Math.PI*2); ctxF.arc(352, 256, 15, 0, Math.PI*2); ctxF.fill();
-    ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(145, 235, 10, 0, Math.PI*2); ctxF.arc(337, 235, 10, 0, Math.PI*2); ctxF.fill();
-    ctxF.strokeStyle = '#4a2e15'; ctxF.lineWidth = 12; ctxF.lineCap = 'round';
-    ctxF.beginPath(); ctxF.moveTo(100, 180); ctxF.lineTo(200, 200); ctxF.stroke();
-    ctxF.beginPath(); ctxF.moveTo(412, 180); ctxF.lineTo(312, 200); ctxF.stroke();
-    ctxF.beginPath(); ctxF.arc(256, 340, 50, 0, Math.PI); ctxF.stroke();
+    ctxF.fillStyle = '#ffcc99'; ctxF.fillRect(0,0,512,512); // Piel
+    // Ojos grandes
+    ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(160, 256, 55, 0, Math.PI*2); ctxF.arc(352, 256, 55, 0, Math.PI*2); ctxF.fill();
+    // Iris marrón
+    ctxF.fillStyle = '#4a2e15'; ctxF.beginPath(); ctxF.arc(160, 256, 35, 0, Math.PI*2); ctxF.arc(352, 256, 35, 0, Math.PI*2); ctxF.fill();
+    // Pupila negra
+    ctxF.fillStyle = '#000000'; ctxF.beginPath(); ctxF.arc(160, 256, 18, 0, Math.PI*2); ctxF.arc(352, 256, 18, 0, Math.PI*2); ctxF.fill();
+    // Brillo de los ojos
+    ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(140, 230, 12, 0, Math.PI*2); ctxF.arc(332, 230, 12, 0, Math.PI*2); ctxF.fill();
+    // Cejas
+    ctxF.strokeStyle = '#4a2e15'; ctxF.lineWidth = 15; ctxF.lineCap = 'round';
+    ctxF.beginPath(); ctxF.moveTo(90, 170); ctxF.lineTo(200, 190); ctxF.stroke();
+    ctxF.beginPath(); ctxF.moveTo(422, 170); ctxF.lineTo(312, 190); ctxF.stroke();
+    // Sonrisa
+    ctxF.beginPath(); ctxF.arc(256, 340, 60, 0, Math.PI); ctxF.stroke();
     
     const texturaCara = new THREE.CanvasTexture(canvasCara);
-    const caraMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55), new THREE.MeshBasicMaterial({map: texturaCara, transparent: true}));
-    caraMesh.position.set(0, 2.55, 0.4); piloto.add(caraMesh);
+    const caraMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.6), new THREE.MeshBasicMaterial({map: texturaCara, transparent: true}));
+    caraMesh.position.set(0, 2.45, 0.4); piloto.add(caraMesh);
+    
     coche.add(piloto);
 
-    const matGoma = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 });
-    const matRin = new THREE.MeshStandardMaterial({ color: 0xd30000, metalness: 0.8, roughness: 0.2 });
+    // 10. RUEDAS OFF-ROAD CON TACOS Y RIN ROJO
+    const matGoma = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0, metalness: 0.0 });
+    const matRin = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.8, roughness: 0.2 });
     
-    const posRuedas = [[-1.4, 0.9, 1.4], [1.4, 0.9, 1.4], [-1.4, 0.9, -1.4], [1.4, 0.9, -1.4]];
+    const posRuedas = [[-1.5, 0.9, 1.4], [1.5, 0.9, 1.4], [-1.5, 0.9, -1.4], [1.5, 0.9, -1.4]];
     posRuedas.forEach(pos => {
         const ruedaG = new THREE.Group();
-        const llanta = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.7, 32), matGoma);
+        // Llanta base
+        const llanta = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.8, 32), matGoma);
         llanta.rotation.z = Math.PI / 2; llanta.castShadow = true; ruedaG.add(llanta);
-        const rin = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.72, 16), matRin);
+        // Rin
+        const rin = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.82, 16), matRin);
         rin.rotation.z = Math.PI / 2; ruedaG.add(rin);
-        for(let t=0; t<12; t++){
-            const taco = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.4, 0.75), matGoma);
-            taco.position.set(Math.cos(t*Math.PI/6)*0.9, Math.sin(t*Math.PI/6)*0.9, 0);
-            taco.rotation.z = t*Math.PI/6; ruedaG.add(taco);
+        // Tapacubos
+        const tapacubos = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.85, 8), matCromo);
+        tapacubos.rotation.z = Math.PI / 2; ruedaG.add(tapacubos);
+        // Tacos del neumático
+        for(let t=0; t<16; t++){
+            const taco = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.4, 0.85), matGoma);
+            taco.position.set(Math.cos(t*Math.PI/8)*0.9, Math.sin(t*Math.PI/8)*0.9, 0);
+            taco.rotation.z = t*Math.PI/8; ruedaG.add(taco);
         }
         ruedaG.position.set(pos[0], pos[1], pos[2]);
         coche.add(ruedaG); ruedas.push(ruedaG);
     });
+
     scene.add(coche);
         }
-        function crearParticulas() {
+                function crearParticulas() {
             const geoFuego = new THREE.BufferGeometry();
             const posF = new Float32Array(150 * 3);
             const colF = new THREE.Float32BufferAttribute(new Float32Array(150 * 3), 3);
@@ -345,19 +424,20 @@ function crearCoche() {
                 coche.position.z += movimientoZ;
                 coche.position.x -= movimientoX;
 
-                coche.position.y = Math.sin(tiempoGlobal * 20) * 0.03;
+                // Vibración de suspensión
+                coche.position.y = Math.sin(tiempoGlobal * 25) * 0.03;
                 coche.rotation.z = Math.sin(tiempoGlobal * 15) * 0.01;
 
                 ruedas.forEach(r => r.children[0].rotation.x += velocidad * delta * 1.5);
                 if (ruedas.length >= 2) { ruedas[0].rotation.y = direccion * 0.5; ruedas[1].rotation.y = direccion * 0.5; }
 
-                const offsetCamara = new THREE.Vector3(0, 4.5, -9);
+                const offsetCamara = new THREE.Vector3(0, 4.5, -9.5);
                 offsetCamara.applyAxisAngle(new THREE.Vector3(0, 1, 0), coche.rotation.y);
                 const targetCamara = new THREE.Vector3().copy(coche.position).add(offsetCamara);
                 camera.position.lerp(targetCamara, 0.1);
                 
                 const lookAtPos = new THREE.Vector3().copy(coche.position);
-                lookAtPos.y += 1.5;
+                lookAtPos.y += 1.6;
                 camera.lookAt(lookAtPos);
 
                 actualizarParticulas(delta);
@@ -368,4 +448,3 @@ function crearCoche() {
     </script>
 </body>
 </html>
-        
