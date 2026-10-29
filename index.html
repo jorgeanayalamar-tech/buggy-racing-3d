@@ -3,40 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Buggy Racing 3D - Modelo 3D Real</title>
+<title>Buggy Racing 3D - Pro Edition</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { overflow: hidden; background: #87CEEB; font-family: 'Arial Black', Impact, sans-serif; touch-action: none; user-select: none; }
   #game-container { width: 100vw; height: 100vh; }
   #ui-layer { position: fixed; inset: 0; pointer-events: none; }
   
-  /* HUD Superior */
+  /* HUD Superior (Idéntico a la foto) */
   #top-ui { position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); display: flex; justify-content: space-between; align-items: flex-start; }
-  .ui-text { color: white; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-size: 18px; display: flex; flex-direction: column; align-items: center; }
-  .ui-text span { font-size: 36px; line-height: 1; }
+  .ui-text { color: white; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-size: 16px; display: flex; flex-direction: column; align-items: center; font-family: 'Arial Black', sans-serif;}
+  .ui-text span { font-size: 34px; line-height: 1; }
   
-  #progress-container { flex-grow: 1; margin: 15px 20px 0 20px; background: rgba(0,0,0,0.6); height: 16px; border-radius: 8px; border: 2px solid #333; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-  #progress-bar { height: 100%; background: #0055FF; width: 0%; border-radius: 6px; border-right: 2px solid #00BFFF; }
+  #progress-container { flex-grow: 1; margin: 15px 15px 0 15px; background: rgba(0,0,0,0.6); height: 14px; border-radius: 7px; border: 2px solid #333; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+  #progress-bar { height: 100%; background: #0055FF; width: 0%; border-radius: 5px; border-right: 2px solid #00BFFF; }
   
-  /* Controles */
-  .controls { position: absolute; bottom: 20px; display: flex; width: 100%; justify-content: space-between; padding: 0 20px; pointer-events: none; }
-  .btn-group { display: flex; gap: 15px; pointer-events: auto; }
-  .control-btn { width: 80px; height: 80px; background: rgba(200, 200, 200, 0.4); border: 3px solid #888; border-radius: 15px; color: #333; font-size: 30px; display: flex; justify-content: center; align-items: center; font-weight: bold; box-shadow: 0 4px 0 rgba(0,0,0,0.3); backdrop-filter: blur(4px); }
-  .control-btn:active { background: rgba(255, 255, 255, 0.7); transform: translateY(4px); box-shadow: none; }
+  /* Controles (Estilo metálico de la foto) */
+  .controls { position: absolute; bottom: 20px; display: flex; width: 100%; justify-content: space-between; padding: 0 15px; pointer-events: none; }
+  .btn-group { display: flex; gap: 10px; pointer-events: auto; }
+  .control-btn { width: 75px; height: 75px; background: rgba(180, 180, 180, 0.5); border: 3px solid #DDD; border-radius: 15px; color: #222; font-size: 28px; display: flex; justify-content: center; align-items: center; font-weight: bold; box-shadow: 0 5px 0 rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+  .control-btn:active { background: rgba(255, 255, 255, 0.8); transform: translateY(5px); box-shadow: none; }
   
   #start-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.7); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; z-index: 10; }
-  #start-screen h1 { font-size: 42px; margin-bottom: 20px; text-shadow: 4px 4px 0 #FF0000, 8px 8px 0 #000; color: #FFD700; text-align: center; transform: rotate(-5deg); }
+  #start-screen h1 { font-size: 38px; margin-bottom: 20px; text-shadow: 4px 4px 0 #FF0000, 8px 8px 0 #000; color: #FFD700; text-align: center; transform: rotate(-5deg); }
   #start-btn { padding: 15px 50px; font-size: 24px; background: #FF4500; color: white; border: 4px solid #FFD700; border-radius: 15px; font-weight: bold; box-shadow: 0 8px 0 #8B0000; }
   #start-btn:active { transform: translateY(8px); box-shadow: 0 0px 0 #8B0000; }
-  
-  /* Pantalla de carga del modelo 3D */
-  #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; text-shadow: 2px 2px 0 #000; z-index: 20; text-align: center; }
 </style>
 </head>
 <body>
 <div id="game-container"></div>
-<div id="loading">Cargando Modelo 3D...<br><span style="font-size:14px">Por favor espera</span></div>
-
 <div id="ui-layer">
   <div id="top-ui">
     <div class="ui-text">PUESTO <span>1/6</span></div>
@@ -50,8 +45,8 @@
       <div class="control-btn" id="btn-right">►</div>
     </div>
     <div class="btn-group">
-      <div class="control-btn" id="btn-brake" style="font-size:16px; background: rgba(255, 69, 0, 0.5); color: white;">FRENO</div>
-      <div class="control-btn" id="btn-gas" style="background: rgba(0, 255, 0, 0.5); font-size:16px; color: white;">GAS</div>
+      <div class="control-btn" id="btn-brake" style="font-size:14px; background: rgba(255, 69, 0, 0.6); color: white;">FRENO</div>
+      <div class="control-btn" id="btn-gas" style="background: rgba(0, 255, 0, 0.6); font-size:14px; color: white;">GAS</div>
     </div>
   </div>
   
@@ -62,21 +57,15 @@
 </div>
 
 <script type="importmap">
-{ 
-  "imports": { 
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  } 
-}
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
 </script>
 
 <script type="module">
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB);
-scene.fog = new THREE.Fog(0x87CEEB, 150, 500);
+scene.background = new THREE.Color(0x4FC3F7);
+scene.fog = new THREE.Fog(0x4FC3F7, 200, 600); // Niebla para dar profundidad a los acantilados
 
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -93,7 +82,7 @@ window.addEventListener('resize', () => {
 });
 
 // LUCES
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0xE8C37D, 1.5); scene.add(hemiLight);
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0xE8C37D, 1.2); scene.add(hemiLight);
 const dirLight = new THREE.DirectionalLight(0xfff5d1, 2.5);
 dirLight.position.set(100, 200, 50); dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 2048; dirLight.shadow.mapSize.height = 2048;
@@ -101,17 +90,15 @@ dirLight.shadow.camera.left = -200; dirLight.shadow.camera.right = 200;
 dirLight.shadow.camera.top = 200; dirLight.shadow.camera.bottom = -200;
 scene.add(dirLight);
 
-// AGUA ANIMADA
-const waterGeo = new THREE.PlaneGeometry(4000, 4000);
-const waterCanvas = document.createElement('canvas'); waterCanvas.width = 512; waterCanvas.height = 512;
-const wCtx = waterCanvas.getContext('2d');
-wCtx.fillStyle = '#0088cc'; wCtx.fillRect(0,0,512,512);
-for(let i=0; i<200; i++) { wCtx.fillStyle = Math.random() > 0.5 ? '#00aaff' : '#0055aa'; wCtx.beginPath(); wCtx.arc(Math.random()*512, Math.random()*512, Math.random()*20+5, 0, Math.PI*2); wCtx.fill(); }
-const waterTex = new THREE.CanvasTexture(waterCanvas); waterTex.wrapS = THREE.RepeatWrapping; waterTex.wrapT = THREE.RepeatWrapping; waterTex.repeat.set(20, 20);
-const waterMat = new THREE.MeshStandardMaterial({ map: waterTex, color: 0x00BFFF, roughness: 0.2, metalness: 0.4 });
-const water = new THREE.Mesh(waterGeo, waterMat); water.rotation.x = -Math.PI / 2; water.position.y = -2.0; scene.add(water);
+// --- MAR CON OLAS ---
+const waterGeo = new THREE.PlaneGeometry(3000, 3000, 64, 64);
+const waterMat = new THREE.MeshStandardMaterial({ color: 0x00BFFF, roughness: 0.1, metalness: 0.3, flatShading: true });
+const water = new THREE.Mesh(waterGeo, waterMat);
+water.rotation.x = -Math.PI / 2; water.position.y = -2.0; water.receiveShadow = true; scene.add(water);
+const waterPositions = waterGeo.attributes.position.array;
+const waterInitialY = Float32Array.from(waterPositions.filter((_, i) => i % 3 === 1));
 
-// PISTA DE ARENA
+// --- PISTA DE TIERRA ---
 const trackCurve = new THREE.CatmullRomCurve3([
   new THREE.Vector3(0, 0, 0), new THREE.Vector3(40, 0, -80), new THREE.Vector3(120, 0, -100),
   new THREE.Vector3(160, 0, -20), new THREE.Vector3(140, 0, 80), new THREE.Vector3(60, 0, 120),
@@ -123,7 +110,7 @@ const trackGeo = new THREE.BufferGeometry(); const posArray = [], indexArray = [
 for (let i = 0; i <= 300; i++) {
   const t = i / 300; const p = trackCurve.getPointAt(t); const tangent = trackCurve.getTangentAt(t).normalize();
   const right = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize();
-  posArray.push(p.x - right.x*12, 0.02, p.z - right.z*12, p.x + right.x*12, 0.02, p.z + right.z*12);
+  posArray.push(p.x - right.x*15, 0.02, p.z - right.z*15, p.x + right.x*15, 0.02, p.z + right.z*15);
   uvArray.push(0, t*30, 1, t*30);
   if (i < 300) { const a = i*2; const b = i*2+1; const c = i*2+2; const d = i*2+3; indexArray.push(a, c, b, b, c, d); }
 }
@@ -131,73 +118,129 @@ trackGeo.setAttribute('position', new THREE.Float32BufferAttribute(posArray, 3))
 trackGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArray, 2));
 trackGeo.setIndex(indexArray); trackGeo.computeVertexNormals();
 
-const sandCanvas = document.createElement('canvas'); sandCanvas.width = 1024; sandCanvas.height = 1024;
-const sCtx = sandCanvas.getContext('2d'); sCtx.fillStyle = '#D2A679'; sCtx.fillRect(0, 0, 1024, 1024);
-for(let i=0; i<20000; i++) { sCtx.fillStyle = Math.random() > 0.5 ? '#C28B4B' : '#E8C37D'; sCtx.fillRect(Math.random()*1024, Math.random()*1024, 3, 3); }
+// Textura de tierra con surcos
+const sandCanvas = document.createElement('canvas'); sandCanvas.width = 512; sandCanvas.height = 512;
+const sCtx = sandCanvas.getContext('2d'); sCtx.fillStyle = '#C19A6B'; sCtx.fillRect(0, 0, 512, 512);
+for(let i=0; i<8000; i++) { sCtx.fillStyle = Math.random() > 0.5 ? '#A67B5B' : '#D2B48C'; sCtx.fillRect(Math.random()*512, Math.random()*512, 3, 3); }
+// Surcos
+sCtx.strokeStyle = 'rgba(0,0,0,0.1)'; sCtx.lineWidth = 8;
+for(let i=0; i<512; i+=64) { sCtx.beginPath(); sCtx.moveTo(i, 0); sCtx.bezierCurveTo(i+20, 256, i-20, 256, i, 512); sCtx.stroke(); }
 const sandTex = new THREE.CanvasTexture(sandCanvas); sandTex.wrapS = THREE.RepeatWrapping; sandTex.wrapT = THREE.RepeatWrapping;
 const trackMesh = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({ map: sandTex, roughness: 1, side: THREE.DoubleSide }));
 trackMesh.receiveShadow = true; scene.add(trackMesh);
 
-const island = new THREE.Mesh(new THREE.CylinderGeometry(300, 310, 4, 64), new THREE.MeshStandardMaterial({ color: 0xE8C37D, roughness: 1 }));
+// Base de la isla
+const island = new THREE.Mesh(new THREE.CylinderGeometry(350, 360, 4, 64), new THREE.MeshStandardMaterial({ color: 0xC19A6B, roughness: 1 }));
 island.position.y = -2; island.receiveShadow = true; scene.add(island);
 
-// ROCAS Y PALMERAS
-const rockMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 1, flatShading: true });
-for (let i = 0; i < 40; i++) {
-  const size = 20 + Math.random() * 30; const rockGeo = new THREE.DodecahedronGeometry(size, 1);
-  const rock = new THREE.Mesh(rockGeo, rockMat); const angle = Math.random() * Math.PI * 2; const dist = 250 + Math.random() * 50;
-  rock.position.set(Math.cos(angle)*dist, size/2 - 5, Math.sin(angle)*dist); rock.castShadow = true; scene.add(rock);
+// --- ACANTILADOS (Rodean la isla para encerrar la pista) ---
+const rockMat = new THREE.MeshStandardMaterial({ color: 0x7A8B8B, roughness: 0.9, flatShading: true });
+for (let i = 0; i < 60; i++) {
+  const size = 40 + Math.random() * 50;
+  const rockGeo = new THREE.DodecahedronGeometry(size, 1);
+  // Deformar roca para hacerla más afilada
+  const pos = rockGeo.attributes.position;
+  for(let j=0; j<pos.count; j++) {
+    pos.setXYZ(j, pos.getX(j)*(0.8+Math.random()*0.6), pos.getY(j)*(1.2+Math.random()*0.8), pos.getZ(j)*(0.8+Math.random()*0.6));
+  }
+  rockGeo.computeVertexNormals();
+  
+  const rock = new THREE.Mesh(rockGeo, rockMat);
+  const angle = (i / 60) * Math.PI * 2;
+  const dist = 280 + Math.random() * 40;
+  rock.position.set(Math.cos(angle)*dist, size/2 - 10, Math.sin(angle)*dist);
+  rock.rotation.set(Math.random(), Math.random(), Math.random());
+  rock.castShadow = true; rock.receiveShadow = true; scene.add(rock);
 }
-const palmGroup = new THREE.Group();
+
+// --- PALMERAS Y ARBUSTOS ---
 const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5C4033, roughness: 1 });
 const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.8, side: THREE.DoubleSide });
-for (let i = 0; i < 150; i++) {
+for (let i = 0; i < 120; i++) {
   let x = (Math.random() - 0.5) * 500; let z = (Math.random() - 0.5) * 500;
-  if (Math.sqrt(x*x + z*z) > 280) continue;
+  if (Math.sqrt(x*x + z*z) > 260 || Math.sqrt(x*x + z*z) < 80) continue;
   const palm = new THREE.Group();
-  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3((Math.random()-0.5)*5, 6, 0), new THREE.Vector3((Math.random()-0.5)*10, 15, 0)]);
-  const trunk = new THREE.Mesh(new THREE.TubeGeometry(curve, 10, 0.6, 6, false), trunkMat); trunk.castShadow = true; palm.add(trunk);
+  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3((Math.random()-0.5)*4, 6, 0), new THREE.Vector3((Math.random()-0.5)*8, 14, 0)]);
+  const trunk = new THREE.Mesh(new THREE.TubeGeometry(curve, 8, 0.6, 6, false), trunkMat); trunk.castShadow = true; palm.add(trunk);
   for(let j=0; j<8; j++) {
-    const leaf = new THREE.Mesh(new THREE.ConeGeometry(1.5, 8, 4), leafMat);
-    leaf.position.copy(curve.getPointAt(1)); leaf.rotation.z = Math.PI / 2.5; leaf.rotation.y = (j * Math.PI) / 4;
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(1.5, 7, 4), leafMat);
+    leaf.position.copy(curve.getPointAt(1)); leaf.rotation.z = Math.PI / 2.2; leaf.rotation.y = (j * Math.PI) / 4;
     leaf.castShadow = true; palm.add(leaf);
   }
-  palm.position.set(x, 0, z); palm.rotation.y = Math.random() * Math.PI; palmGroup.add(palm);
+  palm.position.set(x, 0, z); palm.rotation.y = Math.random() * Math.PI; scene.add(palm);
 }
-scene.add(palmGroup);
-// --- CONTENEDOR DEL VEHÍCULO Y CARGADOR 3D ---
-const vehicleGroup = new THREE.Group(); 
-scene.add(vehicleGroup);
+ // --- BUGGY (Modelo Detallado con Humo y Llamas) ---
+const buggy = new THREE.Group();
+const bodyMat = new THREE.MeshStandardMaterial({ color: 0xCC0000, roughness: 0.3, metalness: 0.4 }); // Rojo
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+const metalMat = new THREE.MeshStandardMaterial({ color: 0xCCCCCC, metalness: 0.9, roughness: 0.2 });
+const skinMat = new THREE.MeshStandardMaterial({ color: 0xFFCC80 });
+const hairMat = new THREE.MeshStandardMaterial({ color: 0x880000, flatShading: true });
 
-const loader = new GLTFLoader();
-document.getElementById('loading').style.display = 'block';
+// Textura de llamas
+const flameCanvas = document.createElement('canvas'); flameCanvas.width = 256; flameCanvas.height = 256;
+const fCtx = flameCanvas.getContext('2d');
+fCtx.fillStyle = '#CC0000'; fCtx.fillRect(0,0,256,256);
+fCtx.fillStyle = '#FFD700';
+fCtx.beginPath(); fCtx.moveTo(0, 256); fCtx.bezierCurveTo(60, 100, 120, 200, 128, 50); fCtx.bezierCurveTo(136, 200, 196, 100, 256, 256); fCtx.fill();
+const flameTex = new THREE.CanvasTexture(flameCanvas);
 
-// ⚠️ AQUÍ VA TU ENLACE ⚠️
-// Cuando tengas tu modelo descargado (ej. buggy.glb) y subido a un servidor,
-// reemplaza este enlace por el tuyo. Ejemplo: 'https://tusitio.com/buggy.glb'
-const modelUrl = 'https://threejs.org/examples/models/gltf/ferrari.glb'; 
+// Chasis
+const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.7, 3.8), bodyMat);
+chassis.position.y = 0.9; chassis.castShadow = true; buggy.add(chassis);
 
-loader.load(modelUrl, function (gltf) {
-  const carModel = gltf.scene;
-  
-  // Ajustar tamaño y rotación del modelo (puedes cambiar estos valores según tu modelo)
-  carModel.scale.set(1.2, 1.2, 1.2);
-  carModel.rotation.y = Math.PI; // Asegura que mire hacia adelante
-  
-  // Hacer que el modelo reciba y proyecte sombras
-  carModel.traverse((child) => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
-  
-  vehicleGroup.add(carModel);
-  document.getElementById('loading').style.display = 'none'; // Ocultar carga
-}, undefined, function (error) {
-  console.error('Error cargando el modelo:', error);
-  document.getElementById('loading').innerText = 'Error al cargar el modelo 3D.';
+// Capó con llamas
+const hood = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.3, 1.6), new THREE.MeshStandardMaterial({ map: flameTex, roughness: 0.2 }));
+hood.position.set(0, 1.25, 0.8); buggy.add(hood);
+
+// Jaula Antivuelco
+const cageGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.8, 8);
+const cage1 = new THREE.Mesh(cageGeo, metalMat); cage1.position.set(-0.9, 1.7, -0.5); cage1.rotation.x = 0.2; buggy.add(cage1);
+const cage2 = new THREE.Mesh(cageGeo, metalMat); cage2.position.set(0.9, 1.7, -0.5); cage2.rotation.x = 0.2; buggy.add(cage2);
+const cage3 = new THREE.Mesh(cageGeo, metalMat); cage3.position.set(0, 2.6, -0.5); cage3.rotation.z = Math.PI/2; buggy.add(cage3);
+
+// Motor y Tubos de Escape
+const engine = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 0.8), darkMat);
+engine.position.set(0, 1.2, -1.6); engine.castShadow = true; buggy.add(engine);
+
+const exhaustGeo = new THREE.CylinderGeometry(0.1, 0.15, 0.8, 8);
+const exhaust1 = new THREE.Mesh(exhaustGeo, metalMat); exhaust1.position.set(-0.5, 0.9, -2.0); exhaust1.rotation.x = Math.PI/2; buggy.add(exhaust1);
+const exhaust2 = new THREE.Mesh(exhaustGeo, metalMat); exhaust2.position.set(0.5, 0.9, -2.0); exhaust2.rotation.x = Math.PI/2; buggy.add(exhaust2);
+
+// Conductor
+const driver = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.7), darkMat);
+driver.position.set(0, 1.6, -0.2); buggy.add(driver);
+const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), skinMat);
+head.position.set(0, 2.2, -0.2); buggy.add(head);
+// Pelo
+for(let i=0; i<6; i++) {
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.6, 4), hairMat);
+  spike.position.set((Math.random()-0.5)*0.4, 2.5, -0.2 + (Math.random()-0.5)*0.4);
+  spike.rotation.set(Math.random(), Math.random(), Math.random());
+  buggy.add(spike);
+}
+
+// Ruedas con textura de neumático
+const wheelGeoF = new THREE.CylinderGeometry(0.7, 0.7, 0.7, 16); wheelGeoF.rotateZ(Math.PI / 2);
+const wheelGeoR = new THREE.CylinderGeometry(1.0, 1.0, 0.9, 16); wheelGeoR.rotateZ(Math.PI / 2);
+const wheels = [];
+const tireMat = new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 1 });
+
+const wheelPositions = [
+  { x: -1.3, y: 0.7, z: 1.3, geo: wheelGeoF }, { x: 1.3, y: 0.7, z: 1.3, geo: wheelGeoF },
+  { x: -1.4, y: 1.0, z: -1.4, geo: wheelGeoR }, { x: 1.4, y: 1.0, z: -1.4, geo: wheelGeoR }
+];
+
+wheelPositions.forEach(pos => {
+  const wg = new THREE.Group();
+  const tire = new THREE.Mesh(pos.geo, tireMat); tire.castShadow = true; wg.add(tire);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(pos.geo.parameters.radiusTop*0.6, pos.geo.parameters.radiusTop*0.6, pos.geo.parameters.height+0.1, 8), metalMat);
+  rim.rotation.z = Math.PI / 2; wg.add(rim);
+  wg.position.set(pos.x, pos.y, pos.z);
+  buggy.add(wg);
+  wheels.push(wg);
 });
+scene.add(buggy);
 
 // --- FÍSICA Y CONTROLES ---
 let speed = 0; const maxSpeed = 35;
@@ -206,40 +249,61 @@ const keys = { gas: false, brake: false, left: false, right: false };
 
 function bindBtn(id, key) {
   const el = document.getElementById(id);
-  const down = (e) => { e.preventDefault(); keys[key] = true; el.style.transform = 'scale(0.9)'; };
+  const down = (e) => { e.preventDefault(); keys[key] = true; el.style.transform = 'scale(0.95)'; };
   const up = (e) => { e.preventDefault(); keys[key] = false; el.style.transform = 'scale(1)'; };
   el.addEventListener('pointerdown', down); el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
 }
 bindBtn('btn-gas', 'gas'); bindBtn('btn-brake', 'brake'); bindBtn('btn-left', 'left'); bindBtn('btn-right', 'right');
 
-// --- PARTÍCULAS DE POLVO ---
+// --- PARTÍCULAS (Polvo y Humo de Escape) ---
+function createParticleTexture() {
+  const c = document.createElement('canvas'); c.width=32; c.height=32;
+  const ctx = c.getContext('2d'); 
+  const grad = ctx.createRadialGradient(16,16,0,16,16,16);
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,32,32);
+  return new THREE.CanvasTexture(c);
+}
+const pTex = createParticleTexture();
+
+// Polvo
 const dustGeo = new THREE.BufferGeometry();
-const dustCount = 150;
+const dustCount = 100;
 const dustPositions = new Float32Array(dustCount * 3);
 const dustVelocities = [];
 for(let i=0; i<dustCount; i++) { dustPositions[i*3+1] = -50; dustVelocities.push({x:0, y:0, z:0, life:0}); }
 dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-const dustMat = new THREE.PointsMaterial({ color: 0xE8C37D, size: 2.0, transparent: true, opacity: 0.6, map: (function(){
-  const c = document.createElement('canvas'); c.width=32; c.height=32;
-  const ctx = c.getContext('2d'); ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(16,16,16,0,Math.PI*2); ctx.fill();
-  return new THREE.CanvasTexture(c);
-})() });
-const dustParticles = new THREE.Points(dustGeo, dustMat);
-scene.add(dustParticles);
+const dustMat = new THREE.PointsMaterial({ color: 0xD2B48C, size: 2.0, transparent: true, opacity: 0.6, map: pTex });
+const dustParticles = new THREE.Points(dustGeo, dustMat); scene.add(dustParticles);
+
+// Humo de escape
+const smokeGeo = new THREE.BufferGeometry();
+const smokeCount = 50;
+const smokePositions = new Float32Array(smokeCount * 3);
+const smokeVelocities = [];
+for(let i=0; i<smokeCount; i++) { smokePositions[i*3+1] = -50; smokeVelocities.push({x:0, y:0, z:0, life:0}); }
+smokeGeo.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
+const smokeMat = new THREE.PointsMaterial({ color: 0x333333, size: 1.5, transparent: true, opacity: 0.5, map: pTex });
+const smokeParticles = new THREE.Points(smokeGeo, smokeMat); scene.add(smokeParticles);
 
 // --- BUCLE PRINCIPAL ---
 let lastTime = performance.now();
+let time = 0;
 
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now();
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
+  time += dt;
 
-  // Animar agua
-  waterTex.offset.x += 0.05 * dt;
-  waterTex.offset.y += 0.02 * dt;
+  // Animar olas
+  for (let i = 0; i < waterPositions.length; i += 3) {
+    waterPositions[i+1] = waterInitialY[i/3] + Math.sin(waterPositions[i]*0.02 + time) * 1.5 + Math.cos(waterPositions[i+2]*0.02 + time) * 1.5;
+  }
+  waterGeo.attributes.position.needsUpdate = true;
+  waterGeo.computeVertexNormals();
 
   if (isPlaying) {
     // Física
@@ -256,41 +320,69 @@ function animate() {
 
     carAngle += steer * (speed / maxSpeed);
     
-    // Mover el contenedor del vehículo
-    vehicleGroup.position.x += Math.sin(carAngle) * speed * dt;
-    vehicleGroup.position.z += Math.cos(carAngle) * speed * dt;
-    vehicleGroup.rotation.y = carAngle;
+    buggy.position.x += Math.sin(carAngle) * speed * dt;
+    buggy.position.z += Math.cos(carAngle) * speed * dt;
+    buggy.rotation.y = carAngle;
+
+    // Animación de ruedas
+    wheels.forEach(w => w.rotation.x += speed * dt * 2);
 
     // Cámara
-    const targetPos = vehicleGroup.position.clone().add(new THREE.Vector3(Math.sin(carAngle)*-16, 6, Math.cos(carAngle)*-16));
+    const targetPos = buggy.position.clone().add(new THREE.Vector3(Math.sin(carAngle)*-16, 7, Math.cos(carAngle)*-16));
     camera.position.lerp(targetPos, 0.1);
-    camera.lookAt(vehicleGroup.position.clone().add(new THREE.Vector3(0, 2, 0)));
+    camera.lookAt(buggy.position.clone().add(new THREE.Vector3(0, 2, 0)));
 
-    // Barra de progreso
+    // Progreso
     let closestT = 0; let minDist = 9999;
     for(let t = 0; t <= 1; t += 0.01) {
-      const d = trackCurve.getPointAt(t).distanceTo(vehicleGroup.position);
+      const d = trackCurve.getPointAt(t).distanceTo(buggy.position);
       if(d < minDist) { minDist = d; closestT = t; }
     }
     document.getElementById('progress-bar').style.width = (closestT * 100) + '%';
 
-    // Polvo
-    const positions = dustGeo.attributes.position.array;
-    if (speed > 5 && Math.random() > 0.3) {
+    // --- SISTEMA DE PARTÍCULAS ---
+    const dPos = dustGeo.attributes.position.array;
+    const sPos = smokeGeo.attributes.position.array;
+    
+    // Generar polvo (ruedas traseras)
+    if (speed > 5 && Math.random() > 0.4) {
       let idx = Math.floor(Math.random() * dustCount);
-      positions[idx*3] = vehicleGroup.position.x - Math.sin(carAngle)*2 + (Math.random()-0.5)*2;
-      positions[idx*3+1] = 0.5;
-      positions[idx*3+2] = vehicleGroup.position.z - Math.cos(carAngle)*2 + (Math.random()-0.5)*2;
-      dustVelocities[idx] = { x: (Math.random()-0.5)*2, y: Math.random()*3, z: (Math.random()-0.5)*2, life: 1.0 };
+      dPos[idx*3] = buggy.position.x - Math.sin(carAngle)*1.8 + (Math.random()-0.5)*2;
+      dPos[idx*3+1] = 0.3;
+      dPos[idx*3+2] = buggy.position.z - Math.cos(carAngle)*1.8 + (Math.random()-0.5)*2;
+      dustVelocities[idx] = { x: (Math.random()-0.5)*2, y: Math.random()*2, z: (Math.random()-0.5)*2, life: 1.0 };
     }
+    // Generar humo (escape)
+    if (Math.random() > 0.2) {
+      let idx = Math.floor(Math.random() * smokeCount);
+      // Calcular posición del escape trasero
+      const localOffset = new THREE.Vector3((Math.random()-0.5)*1.2, 0.9, -2.2);
+      localOffset.applyAxisAngle(new THREE.Vector3(0,1,0), carAngle);
+      sPos[idx*3] = buggy.position.x + localOffset.x;
+      sPos[idx*3+1] = localOffset.y;
+      sPos[idx*3+2] = buggy.position.z + localOffset.z;
+      smokeVelocities[idx] = { x: (Math.random()-0.5)*1, y: Math.random()*1.5, z: (Math.random()-0.5)*1, life: 0.8 };
+    }
+
+    // Actualizar Polvo
     for(let i=0; i<dustCount; i++) {
       let v = dustVelocities[i];
       if (v.life > 0) {
-        positions[i*3] += v.x * dt; positions[i*3+1] += v.y * dt; positions[i*3+2] += v.z * dt;
+        dPos[i*3] += v.x * dt; dPos[i*3+1] += v.y * dt; dPos[i*3+2] += v.z * dt;
         v.life -= dt;
-      } else { positions[i*3+1] = -50; }
+      } else { dPos[i*3+1] = -50; }
     }
     dustGeo.attributes.position.needsUpdate = true;
+
+    // Actualizar Humo
+    for(let i=0; i<smokeCount; i++) {
+      let v = smokeVelocities[i];
+      if (v.life > 0) {
+        sPos[i*3] += v.x * dt; sPos[i*3+1] += v.y * dt; sPos[i*3+2] += v.z * dt;
+        v.life -= dt;
+      } else { sPos[i*3+1] = -50; }
+    }
+    smokeGeo.attributes.position.needsUpdate = true;
   }
 
   renderer.render(scene, camera);
@@ -298,7 +390,7 @@ function animate() {
 
 document.getElementById('start-btn').addEventListener('click', () => {
   document.getElementById('start-screen').style.display = 'none';
-  vehicleGroup.position.copy(trackCurve.getPointAt(0));
+  buggy.position.copy(trackCurve.getPointAt(0));
   isPlaying = true;
   animate();
 });
