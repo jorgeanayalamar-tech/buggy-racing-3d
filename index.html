@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Beach Buggy - Pro Móvil</title>
+    <title>Beach Buggy - Calidad Render</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
         body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Luckiest Guy', cursive; user-select: none; }
@@ -48,50 +48,57 @@
         let acelerando = true; 
 
         function init() {
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             
-            // CONFIGURACIÓN DE COLOR PROFESIONAL SEGURA
+            // Configuración de color de alto nivel (Tone Mapping)
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.0;
+            renderer.toneMappingExposure = 1.2;
             renderer.outputEncoding = THREE.sRGBEncoding;
-            
             document.body.appendChild(renderer.domElement);
 
             scene = new THREE.Scene();
-            
-            // --- TRUCO PRO: MAPA DE ENTORNO FALSO (Para que el metal brille y no sea negro) ---
-            const canvasEnv = document.createElement('canvas');
-            canvasEnv.width = 64; canvasEnv.height = 64;
-            const ctxEnv = canvasEnv.getContext('2d');
-            ctxEnv.fillStyle = '#87CEEB'; ctxEnv.fillRect(0, 0, 64, 32); // Cielo
-            ctxEnv.fillStyle = '#e3c28d'; ctxEnv.fillRect(0, 32, 64, 32); // Suelo
-            const envMap = new THREE.CanvasTexture(canvasEnv);
-            envMap.mapping = THREE.EquirectangularReflectionMapping;
-            scene.environment = envMap; // Esto ilumina los metales sin romper el celular
-
             scene.background = new THREE.Color(0x87CEEB); 
-            scene.fog = new THREE.FogExp2(0x87CEEB, 0.005);
+            scene.fog = new THREE.FogExp2(0x87CEEB, 0.004);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 4.5, -7.5); 
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 4.5, -8); 
             reloj = new THREE.Clock();
 
-            // LUCES
-            const sol = new THREE.DirectionalLight(0xffffff, 2.0);
+            // LUCES PROFESIONALES TIPO ESTUDIO
+            const sol = new THREE.DirectionalLight(0xfff5e6, 3.0);
             sol.position.set(30, 50, -20);
             sol.castShadow = true;
-            sol.shadow.mapSize.width = 1024;
-            sol.shadow.mapSize.height = 1024;
+            sol.shadow.mapSize.width = 2048;
+            sol.shadow.mapSize.height = 2048;
             sol.shadow.camera.left = -50; sol.shadow.camera.right = 50; sol.shadow.camera.top = 50; sol.shadow.camera.bottom = -50;
+            sol.shadow.bias = -0.0005;
             scene.add(sol);
 
             const ambiente = new THREE.HemisphereLight(0xffffff, 0x8b5a2b, 1.0);
             scene.add(ambiente);
-                        crearEntorno(); 
+
+            // --- GENERADOR DE REFLEJOS (PMREM) - Clave para el look de Blender ---
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            const envScene = new THREE.Scene();
+            // Creamos un cielo simulado para que el metal tenga qué reflejar
+            const envCanvas = document.createElement('canvas');
+            envCanvas.width = 512; envCanvas.height = 512;
+            const eCtx = envCanvas.getContext('2d');
+            const eGrad = eCtx.createLinearGradient(0, 0, 0, 512);
+            eGrad.addColorStop(0, '#ffffff'); // Luz cenital fuerte
+            eGrad.addColorStop(0.5, '#87CEEB'); // Azul cielo
+            eGrad.addColorStop(1, '#e3c28d'); // Arena
+            eCtx.fillStyle = eGrad; eCtx.fillRect(0, 0, 512, 512);
+            const envTexture = new THREE.CanvasTexture(envCanvas);
+            envTexture.mapping = THREE.EquirectangularReflectionMapping;
+            
+            const envMap = pmremGenerator.fromEquirectangular(envTexture).texture;
+            scene.environment = envMap; // Aplica los reflejos a todos los materiales metálicos
+                    crearEntorno(); 
             crearCochePro(); 
             crearFuegoEscape(); 
 
@@ -113,142 +120,111 @@
             
             const texturaSuelo = new THREE.CanvasTexture(canvas);
             texturaSuelo.wrapS = THREE.RepeatWrapping; texturaSuelo.wrapT = THREE.RepeatWrapping; texturaSuelo.repeat.set(15, 15);
-            
-            const suelo = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({ map: texturaSuelo, roughness: 1.0, metalness: 0.0 }));
+            const suelo = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({ map: texturaSuelo, roughness: 1.0 }));
             suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; scene.add(suelo);
-
-            const matAgua = new THREE.MeshStandardMaterial({ color: 0x0088cc, transparent: true, opacity: 0.85, roughness: 0.1, metalness: 0.2 });
-            const aguaIzq = new THREE.Mesh(new THREE.PlaneGeometry(400, 1000), matAgua);
-            aguaIzq.rotation.x = -Math.PI / 2; aguaIzq.position.set(-300, -0.1, 0); scene.add(aguaIzq);
-            const aguaDer = aguaIzq.clone(); aguaDer.position.x = 300; scene.add(aguaDer);
         }
 
         function crearCochePro() {
             coche = new THREE.Group();
 
-            // --- 1. CHASIS (Rojo brillante) ---
-            const matRojo = new THREE.MeshStandardMaterial({ color: 0xee0000, metalness: 0.4, roughness: 0.2 });
-            const matBlanco = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.2, roughness: 0.3 });
+            // Materiales con brillo realista (Metalness alto + roughness bajo)
+            const matRojo = new THREE.MeshStandardMaterial({ color: 0xd30000, metalness: 0.6, roughness: 0.2 });
+            const matBlanco = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.3 });
+            const matNegro = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.4 });
+            const matCromo = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 1.0, roughness: 0.1 });
 
-            const chasis = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.8, 4.0), matRojo);
-            chasis.position.y = 1.1; chasis.castShadow = true; chasis.receiveShadow = true; coche.add(chasis);
+            // 1. CHASIS CURVO (Usamos Esferas achatadas para que no sea una caja)
+            const cuerpoGeo = new THREE.CapsuleGeometry(0.8, 2.5, 8, 16);
+            const cuerpo = new THREE.Mesh(cuerpoGeo, matRojo);
+            cuerpo.rotation.x = Math.PI / 2; cuerpo.rotation.z = Math.PI / 2;
+            cuerpo.position.set(0, 1.2, 0); cuerpo.scale.set(1.5, 1, 0.6);
+            cuerpo.castShadow = true; cuerpo.receiveShadow = true; coche.add(cuerpo);
 
-            const franja = new THREE.Mesh(new THREE.BoxGeometry(2.42, 0.82, 1.0), matBlanco);
-            franja.position.set(0, 1.1, 1.5); coche.add(franja);
+            // 2. JAULA TUBULAR REAL (Usando curvas y tubos, no cajas)
+            const puntosJaula = [
+                new THREE.Vector3(-1, 1.5, -1.5), new THREE.Vector3(-1, 2.8, -1), new THREE.Vector3(-0.8, 3.0, 0.5), new THREE.Vector3(-0.8, 1.8, 1.5), // Lado izq
+                new THREE.Vector3(0.8, 1.8, 1.5), new THREE.Vector3(0.8, 3.0, 0.5), new THREE.Vector3(1, 2.8, -1), new THREE.Vector3(1, 1.5, -1.5) // Lado der
+            ];
+            const curvaJaula = new THREE.CatmullRomCurve3(puntosJaula);
+            const tuboJaula = new THREE.TubeGeometry(curvaJaula, 64, 0.08, 8, false);
+            const jaula = new THREE.Mesh(tuboJaula, matNegro);
+            jaula.castShadow = true; coche.add(jaula);
 
-            // Número "01" (Textura)
-            const canvasNum = document.createElement('canvas');
-            canvasNum.width = 128; canvasNum.height = 128;
-            const ctxN = canvasNum.getContext('2d');
-            ctxN.fillStyle = '#ee0000'; ctxN.fillRect(0,0,128,128);
-            ctxN.fillStyle = '#ffffff'; ctxN.font = 'bold 80px Arial'; ctxN.textAlign = 'center'; ctxN.textBaseline = 'middle';
-            ctxN.fillText('01', 64, 64);
-            const texNum = new THREE.CanvasTexture(canvasNum);
-            
-            const ladoIzq = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.6), new THREE.MeshBasicMaterial({map: texNum}));
-            ladoIzq.position.set(-1.21, 1.1, 0); ladoIzq.rotation.y = -Math.PI/2; coche.add(ladoIzq);
-            const ladoDer = ladoIzq.clone(); ladoDer.position.x = 1.21; ladoDer.rotation.y = Math.PI/2; coche.add(ladoDer);
-
-            // --- 2. JAULA TUBULAR NEGRA (Metalizada) ---
-            const matJaula = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.3 });
-            const addTubo = (x, y, z, sx, sy, sz) => {
-                const t = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, sy, 8), matJaula);
-                t.position.set(x, y, z);
-                if (sx > 0) t.rotation.z = Math.PI/2;
-                if (sz > 0) t.rotation.x = Math.PI/2;
-                t.castShadow = true; coche.add(t);
-            };
-            addTubo(-1.1, 2.1, -0.8, 0, 1.8, 0); addTubo(1.1, 2.1, -0.8, 0, 1.8, 0);
-            addTubo(-1.1, 2.1, 0.8, 0, 1.8, 0);  addTubo(1.1, 2.1, 0.8, 0, 1.8, 0);
-            addTubo(0, 3.0, -0.8, 2.2, 1, 0);    addTubo(0, 3.0, 0.8, 2.2, 1, 0);
-            addTubo(-1.1, 3.0, 0, 1, 1, 1.6);    addTubo(1.1, 3.0, 0, 1, 1, 1.6);
-            
-            const defensa = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.08, 8, 16, Math.PI), matJaula);
-            defensa.position.set(0, 1.1, 2.0); defensa.rotation.x = Math.PI/2; defensa.rotation.z = Math.PI; coche.add(defensa);
-
-            // --- 3. SUSPENSIÓN ROJA ---
-            const matAmortiguador = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.6, roughness: 0.2 });
-            const posAmortiguadores = [[-1.2, 0.9, 1.2], [1.2, 0.9, 1.2], [-1.2, 0.9, -1.2], [1.2, 0.9, -1.2]];
-            posAmortiguadores.forEach(pos => {
-                const amort = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.0, 8), matAmortiguador);
-                amort.position.set(pos[0], pos[1]+0.3, pos[2]); coche.add(amort);
-            });
-
-            // --- 4. FAROS DE TECHO ---
-            const matFaros = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.0 });
-            for(let i=0; i<4; i++){
-                const faro = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), matFaros);
-                faro.rotation.x = Math.PI / 2; faro.position.set(-0.75 + i*0.5, 3.15, 0.85); coche.add(faro);
-            }
-
-            // --- 5. EL PILOTO (Con su cara y detalles) ---
+            // 3. EL PILOTO (Geometrías Suaves y Cara)
             const piloto = new THREE.Group();
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.5), matRojo);
-            torso.position.y = 2.0; torso.castShadow = true; piloto.add(torso);
             
-            const franjaTraje = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.1), matBlanco);
-            franjaTraje.position.set(0, 2.0, 0); piloto.add(franjaTraje);
-            const arnes = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.8, 0.52), new THREE.MeshStandardMaterial({color:0x111111, metalness:0.5}));
-            arnes.position.set(0, 2.0, 0); piloto.add(arnes);
+            // Cuerpo (Cápsula suave)
+            const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.4, 4, 16), matRojo);
+            torso.position.y = 1.9; torso.castShadow = true; piloto.add(torso);
+            
+            // Casco Brillante
+            const casco = new THREE.Mesh(new THREE.SphereGeometry(0.45, 32, 32), matRojo);
+            casco.position.y = 2.5; casco.castShadow = true; piloto.add(casco);
+            
+            // Franja blanca del casco
+            const franjaCasco = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.9, 0.9), matBlanco);
+            franjaCasco.position.set(0, 2.5, 0); piloto.add(franjaCasco);
 
-            // Brazos y guantes
-            const brazoGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8);
-            const brazoIzq = new THREE.Mesh(brazoGeo, matRojo);
-            brazoIzq.position.set(-0.4, 2.1, 0.2); brazoIzq.rotation.x = Math.PI/3; piloto.add(brazoIzq);
-            const guanteIzq = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshStandardMaterial({color:0x111111}));
-            guanteIzq.position.set(-0.4, 1.9, 0.5); piloto.add(guanteIzq);
-            const brazoDer = brazoIzq.clone(); brazoDer.position.x = 0.4; piloto.add(brazoDer);
-            const guanteDer = guanteIzq.clone(); guanteDer.position.x = 0.4; piloto.add(guanteDer);
+            // Visor Oscuro (Media esfera)
+            const visor = new THREE.Mesh(new THREE.SphereGeometry(0.46, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 0.9, roughness: 0.0 }));
+            visor.position.set(0, 2.5, 0.05); visor.rotation.x = Math.PI / 4; piloto.add(visor);
 
-            // Casco brillante
-            const casco = new THREE.Mesh(new THREE.SphereGeometry(0.4, 32, 32), new THREE.MeshStandardMaterial({color: 0xee0000, metalness: 0.3, roughness: 0.1}));
-            casco.position.y = 2.6; casco.castShadow = true; piloto.add(casco);
-            const franjaCasco = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 0.82), matBlanco);
-            franjaCasco.position.set(0, 2.6, 0); piloto.add(franjaCasco);
+            // Gafas de sol en la frente (Tubo)
+            const gafasGeo = new THREE.TorusGeometry(0.35, 0.08, 8, 16, Math.PI);
+            const gafas = new THREE.Mesh(gafasGeo, matNegro);
+            gafas.position.set(0, 2.8, 0.2); gafas.rotation.x = -Math.PI / 6; piloto.add(gafas);
 
-            // La Cara (Canvas)
+            // La Cara (Canvas de alta resolución)
             const canvasCara = document.createElement('canvas');
-            canvasCara.width = 256; canvasCara.height = 256;
+            canvasCara.width = 512; canvasCara.height = 512;
             const ctxF = canvasCara.getContext('2d');
-            ctxF.fillStyle = '#ffcc99'; ctxF.fillRect(0,0,256,256);
-            ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(80, 128, 25, 0, Math.PI*2); ctxF.arc(176, 128, 25, 0, Math.PI*2); ctxF.fill();
-            ctxF.fillStyle = '#4a2e15'; ctxF.beginPath(); ctxF.arc(80, 128, 15, 0, Math.PI*2); ctxF.arc(176, 128, 15, 0, Math.PI*2); ctxF.fill();
-            ctxF.fillStyle = '#000000'; ctxF.beginPath(); ctxF.arc(80, 128, 8, 0, Math.PI*2); ctxF.arc(176, 128, 8, 0, Math.PI*2); ctxF.fill();
-            ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(75, 120, 4, 0, Math.PI*2); ctxF.arc(171, 120, 4, 0, Math.PI*2); ctxF.fill();
-            ctxF.strokeStyle = '#4a2e15'; ctxF.lineWidth = 6; ctxF.lineCap = 'round';
-            ctxF.beginPath(); ctxF.moveTo(55, 90); ctxF.lineTo(105, 100); ctxF.stroke();
-            ctxF.beginPath(); ctxF.moveTo(201, 90); ctxF.lineTo(151, 100); ctxF.stroke();
-            ctxF.beginPath(); ctxF.arc(128, 170, 25, 0, Math.PI); ctxF.stroke();
+            ctxF.fillStyle = '#ffcc99'; ctxF.fillRect(0,0,512,512);
+            // Ojos Anime Grandes
+            ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(160, 256, 50, 0, Math.PI*2); ctxF.arc(352, 256, 50, 0, Math.PI*2); ctxF.fill();
+            ctxF.fillStyle = '#4a2e15'; ctxF.beginPath(); ctxF.arc(160, 256, 30, 0, Math.PI*2); ctxF.arc(352, 256, 30, 0, Math.PI*2); ctxF.fill();
+            ctxF.fillStyle = '#000000'; ctxF.beginPath(); ctxF.arc(160, 256, 15, 0, Math.PI*2); ctxF.arc(352, 256, 15, 0, Math.PI*2); ctxF.fill();
+            ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(145, 235, 10, 0, Math.PI*2); ctxF.arc(337, 235, 10, 0, Math.PI*2); ctxF.fill();
+            // Cejas y Sonrisa
+            ctxF.strokeStyle = '#4a2e15'; ctxF.lineWidth = 12; ctxF.lineCap = 'round';
+            ctxF.beginPath(); ctxF.moveTo(100, 180); ctxF.lineTo(200, 200); ctxF.stroke();
+            ctxF.beginPath(); ctxF.moveTo(412, 180); ctxF.lineTo(312, 200); ctxF.stroke();
+            ctxF.beginPath(); ctxF.arc(256, 340, 50, 0, Math.PI); ctxF.stroke();
 
             const texturaCara = new THREE.CanvasTexture(canvasCara);
-            const caraMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), new THREE.MeshBasicMaterial({map: texturaCara, transparent: true}));
-            caraMesh.position.set(0, 2.6, 0.39); piloto.add(caraMesh);
-
-            // Gafas brillantes
-            const gafas = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.2), new THREE.MeshStandardMaterial({color:0x111111, metalness: 0.9, roughness: 0.1}));
-            gafas.position.set(0, 2.85, 0.25); piloto.add(gafas);
+            const caraMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55), new THREE.MeshBasicMaterial({map: texturaCara, transparent: true}));
+            caraMesh.position.set(0, 2.45, 0.4); piloto.add(caraMesh);
 
             coche.add(piloto);
 
-            // --- 6. RUEDAS OFF-ROAD ---
-            const matGoma = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9, metalness: 0.0 });
-            const matRin = new THREE.MeshStandardMaterial({ color: 0xee0000, metalness: 0.6, roughness: 0.2 });
+            // 4. RUEDAS OFF-ROAD CON RELIEVE
+            const matGoma = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9, metalness: 0.1 });
+            const matRin = new THREE.MeshStandardMaterial({ color: 0xd30000, metalness: 0.8, roughness: 0.2 });
             
-            const posRuedas = [[-1.5, 0.9, 1.3], [1.5, 0.9, 1.3], [-1.5, 0.9, -1.3], [1.5, 0.9, -1.3]];
+            const posRuedas = [[-1.3, 0.8, 1.2], [1.3, 0.8, 1.2], [-1.3, 0.8, -1.2], [1.3, 0.8, -1.2]];
             posRuedas.forEach(pos => {
                 const ruedaG = new THREE.Group();
-                const llanta = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.7, 16), matGoma);
+                // Llanta curva
+                const llanta = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.6, 32), matGoma);
                 llanta.rotation.z = Math.PI / 2; llanta.castShadow = true; ruedaG.add(llanta);
-                const rin = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.72, 8), matRin);
+                // Rin metálico
+                const rin = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.62, 16), matRin);
                 rin.rotation.z = Math.PI / 2; ruedaG.add(rin);
-                for(let t=0; t<10; t++){
-                    const taco = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.35, 0.75), matGoma);
-                    taco.position.set(Math.cos(t*Math.PI/5)*0.85, Math.sin(t*Math.PI/5)*0.85, 0);
-                    taco.rotation.z = t*Math.PI/5; ruedaG.add(taco);
+                // Tacos de goma
+                for(let t=0; t<12; t++){
+                    const taco = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.65), matGoma);
+                    taco.position.set(Math.cos(t*Math.PI/6)*0.8, Math.sin(t*Math.PI/6)*0.8, 0);
+                    taco.rotation.z = t*Math.PI/6; ruedaG.add(taco);
                 }
                 ruedaG.position.set(pos[0], pos[1], pos[2]);
                 coche.add(ruedaG); ruedas.push(ruedaG);
             });
+
+            // 5. FAROS DE TECHO
+            const matFaros = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.5 });
+            for(let i=0; i<4; i++){
+                const faro = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 16), matFaros);
+                faro.rotation.x = Math.PI / 2; faro.position.set(-0.6 + i*0.4, 3.0, 0.6); coche.add(faro);
+            }
 
             scene.add(coche);
         }
@@ -263,7 +239,7 @@
             }
             geo.setAttribute('position', new THREE.BufferAttribute(posiciones, 3));
             geo.setAttribute('color', colores);
-            const mat = new THREE.PointsMaterial({ size: 0.5, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+            const mat = new THREE.PointsMaterial({ size: 0.4, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
             fuegoEscape = new THREE.Points(geo, mat); scene.add(fuegoEscape);
         }
 
@@ -272,9 +248,9 @@
                 const pos = fuegoEscape.geometry.attributes.position.array;
                 for (let i = 0; i < pos.length; i += 3) {
                     if (pos[i+1] < 0) {
-                        pos[i] = coche.position.x + (Math.random() > 0.5 ? 0.5 : -0.5);
-                        pos[i+1] = 1.2;
-                        pos[i+2] = coche.position.z - 2.5; 
+                        pos[i] = coche.position.x + (Math.random() > 0.5 ? 0.4 : -0.4);
+                        pos[i+1] = 1.0;
+                        pos[i+2] = coche.position.z - 2.0; 
                         break;
                     }
                 }
