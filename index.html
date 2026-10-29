@@ -3,124 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Beach Buggy Pro - Full Render</title>
+    <title>Beach Buggy Pro - Cápsulas Reales</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
-        
         body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Luckiest Guy', cursive; user-select: none; }
         canvas { display: block; }
-
-        /* --- HUD SUPERIOR --- */
         #hud-top { position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; pointer-events: none; z-index: 10; }
         .texto-hud { color: white; font-size: 24px; -webkit-text-stroke: 2px black; text-shadow: 3px 3px 0 #000; letter-spacing: 1px;}
-        
-        /* Barra de progreso central */
         #barra-progreso { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 40%; height: 22px; background: rgba(0,0,0,0.6); border: 4px solid #fff; border-radius: 12px; display: flex; align-items: center; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.5);}
-        #barra-relleno { height: 100%; width: 15%; background: linear-gradient(90deg, #00aaff, #00ffff); border-radius: 8px; transition: width 0.3s ease; }
-        
-        /* Botón de Pausa */
+        #barra-relleno { height: 100%; width: 15%; background: linear-gradient(90deg, #00aaff, #00ffff); border-radius: 8px; }
         #btn-pausa { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: radial-gradient(circle, #ffffff, #0088ff); border: 4px solid #004488; border-radius: 50%; z-index: 10; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 0 #002244; cursor: pointer; }
         #btn-pausa::before, #btn-pausa::after { content: ''; width: 6px; height: 18px; background: #004488; margin: 0 3px; border-radius: 2px; }
-
-        /* --- CONTROLES INFERIORES (ESTILO METÁLICO) --- */
         #controles { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 10; }
-        .panel-metal { 
-            background: linear-gradient(to bottom, #e0e0e0, #808080); 
-            border: 4px solid #222; border-radius: 15px; padding: 12px; 
-            box-shadow: inset 0 0 15px rgba(255,255,255,0.8), 0 8px 0 #111;
-            display: flex; gap: 10px; position: relative;
-        }
-        /* Remaches del panel */
-        .panel-metal::after {
-            content: ''; position: absolute; bottom: 5px; left: 15px; right: 15px; height: 10px;
-            background-image: radial-gradient(#444 40%, transparent 45%); background-size: 12px 12px;
-            background-position: center; opacity: 0.8;
-        }
-        .btn { 
-            width: 65px; height: 65px; border-radius: 12px; 
-            background: linear-gradient(to bottom, #777, #333);
-            border: 3px solid #111; box-shadow: inset 0 3px 5px rgba(255,255,255,0.4), inset 0 -3px 5px rgba(0,0,0,0.6);
-            color: white; font-size: 26px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; font-family: 'Luckiest Guy', cursive; text-shadow: 2px 2px 0 #000;
-        }
+        .panel-metal { background: linear-gradient(to bottom, #e0e0e0, #808080); border: 4px solid #222; border-radius: 15px; padding: 12px; box-shadow: inset 0 0 15px rgba(255,255,255,0.8), 0 8px 0 #111; display: flex; gap: 10px; position: relative; }
+        .panel-metal::after { content: ''; position: absolute; bottom: 5px; left: 15px; right: 15px; height: 10px; background-image: radial-gradient(#444 40%, transparent 45%); background-size: 12px 12px; background-position: center; opacity: 0.8; }
+        .btn { width: 65px; height: 65px; border-radius: 12px; background: linear-gradient(to bottom, #777, #333); border: 3px solid #111; box-shadow: inset 0 3px 5px rgba(255,255,255,0.4), inset 0 -3px 5px rgba(0,0,0,0.6); color: white; font-size: 26px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-family: 'Luckiest Guy', cursive; text-shadow: 2px 2px 0 #000; }
         .btn:active { box-shadow: inset 0 6px 10px rgba(0,0,0,0.8); transform: translateY(5px); }
-        
         .btn-accion { width: 75px; font-size: 16px; }
         #btn-freno { background: linear-gradient(to bottom, #ff5555, #aa0000); }
         #btn-gas { background: linear-gradient(to bottom, #55ff55, #008800); }
-
-        /* --- ITEMS LATERALES --- */
-        .item-slot { 
-            position: absolute; top: 100px; width: 80px; height: 80px; border-radius: 50%; 
-            border: 5px solid #fff; background: radial-gradient(circle, #88ddff, #0055aa); 
-            box-shadow: 0 0 20px #00aaff, inset 0 0 15px #003366; z-index: 10;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .item-slot::after {
-            content: ''; width: 45px; height: 45px; border-radius: 50%;
-            background: radial-gradient(circle, #ffff00, #ff0000);
-            box-shadow: 0 0 15px #ff0000; border: 3px solid #fff;
-        }
+        .item-slot { position: absolute; top: 100px; width: 80px; height: 80px; border-radius: 50%; border: 5px solid #fff; background: radial-gradient(circle, #88ddff, #0055aa); box-shadow: 0 0 20px #00aaff, inset 0 0 15px #003366; z-index: 10; display: flex; justify-content: center; align-items: center; }
+        .item-slot::after { content: ''; width: 45px; height: 45px; border-radius: 50%; background: radial-gradient(circle, #ffff00, #ff0000); box-shadow: 0 0 15px #ff0000; border: 3px solid #fff; }
         #item-izq { left: 20px; }
         #item-der { right: 20px; background: radial-gradient(circle, #88ff88, #006600); box-shadow: 0 0 20px #00ff00, inset 0 0 15px #003300; }
         #item-der::after { background: radial-gradient(circle, #ffffff, #0088ff); box-shadow: 0 0 15px #00aaff; }
     </style>
 </head>
 <body>
-
-    <div id="hud-top">
-        <div class="texto-hud" id="txt-puesto">PUESTO 6/6</div>
-        <div class="texto-hud" id="txt-vuelta">VUELTA 1/1</div>
-    </div>
+    <div id="hud-top"><div class="texto-hud" id="txt-puesto">PUESTO 6/6</div><div class="texto-hud" id="txt-vuelta">VUELTA 1/1</div></div>
     <div id="barra-progreso"><div id="barra-relleno"></div></div>
     <div id="btn-pausa"></div>
-
     <div id="item-izq" class="item-slot"></div>
     <div id="item-der" class="item-slot"></div>
-
     <div id="controles">
-        <div class="panel-metal">
-            <div class="btn" id="btn-izq">◀</div>
-            <div class="btn" id="btn-der">▶</div>
-        </div>
-        <div class="panel-metal">
-            <div class="btn btn-accion" id="btn-freno">FRENO</div>
-            <div class="btn btn-accion" id="btn-gas">GAS</div>
-        </div>
+        <div class="panel-metal"><div class="btn" id="btn-izq">◀</div><div class="btn" id="btn-der">▶</div></div>
+        <div class="panel-metal"><div class="btn btn-accion" id="btn-freno">FRENO</div><div class="btn btn-accion" id="btn-gas">GAS</div></div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
+    <!-- AQUÍ ESTÁ LA SOLUCIÓN: Usamos Three.js r160 (del año 2023) para que CapsuleGeometry funcione -->
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
     <script>
-        // Variables Globales del Juego
         let scene, camera, renderer, reloj;
         let coche, piloto, ruedas = [], fuegoEscape, particulasPolvo;
-        let velocidad = 0;
-        let direccion = 0; // -1 izquierda, 1 derecha
-        let acelerando = false;
-        let frenando = false;
-        let tiempoGlobal = 0;
-
-        // Variables de configuración
-        const VELOCIDAD_MAXIMA = 35;
-        const ACELERACION = 15;
-        const FRENADO = 25;
-        const VELOCIDAD_GIRO = 1.5;
+        let velocidad = 0, direccion = 0, acelerando = false, frenando = false, tiempoGlobal = 0;
+        const VELOCIDAD_MAXIMA = 35, ACELERACION = 15, FRENADO = 25, VELOCIDAD_GIRO = 1.5;
         function init() {
-    // 1. RENDERER DE ALTA CALIDAD
     renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     
-    // Configuración de color profesional
+    // En r160, esto cambió de nombre a outputColorSpace
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     document.body.appendChild(renderer.domElement);
 
-    // 2. ESCENA Y CÁMARA
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB); 
     scene.fog = new THREE.FogExp2(0x87CEEB, 0.005);
@@ -129,155 +68,35 @@
     camera.position.set(0, 5, -9); 
     reloj = new THREE.Clock();
 
-    // 3. LUCES PROFESIONALES
-    // Sol (Luz direccional con sombras nítidas)
-    const sol = new THREE.DirectionalLight(0xfff5e6, 2.5);
+    // LUCES
+    const sol = new THREE.DirectionalLight(0xfff5e6, 3.0);
     sol.position.set(40, 60, -30);
     sol.castShadow = true;
     sol.shadow.mapSize.width = 2048;
     sol.shadow.mapSize.height = 2048;
-    sol.shadow.camera.left = -60; sol.shadow.camera.right = 60;
-    sol.shadow.camera.top = 60; sol.shadow.camera.bottom = -60;
+    sol.shadow.camera.left = -60; sol.shadow.camera.right = 60; sol.shadow.camera.top = 60; sol.shadow.camera.bottom = -60;
     sol.shadow.bias = -0.0005;
     scene.add(sol);
-            function crearEntorno() {
-    // --- SUELO DETALLADO ---
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024; canvas.height = 1024;
-    const ctx = canvas.getContext('2d');
-    
-    // Base de arena
-    ctx.fillStyle = '#e3c28d'; ctx.fillRect(0, 0, 1024, 1024); 
-    // Granos de arena
-    for (let i = 0; i < 80000; i++) {
-        ctx.fillStyle = Math.random() > 0.5 ? '#d1ab70' : '#f0d5ab';
-        ctx.fillRect(Math.random() * 1024, Math.random() * 1024, 2, 2);
-    }
-    // Camino de tierra
-    ctx.fillStyle = '#a87d4b';
-    ctx.beginPath(); 
-    ctx.moveTo(412, 0); ctx.lineTo(612, 0); 
-    ctx.quadraticCurveTo(700, 512, 600, 1024); 
-    ctx.lineTo(424, 1024); 
-    ctx.quadraticCurveTo(324, 512, 412, 0); 
-    ctx.fill();
-    
-    const texturaSuelo = new THREE.CanvasTexture(canvas);
-    texturaSuelo.wrapS = THREE.RepeatWrapping; texturaSuelo.wrapT = THREE.RepeatWrapping; 
-    texturaSuelo.repeat.set(20, 20);
-    texturaSuelo.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    
-    const suelo = new THREE.Mesh(
-        new THREE.PlaneGeometry(1000, 1000), 
-        new THREE.MeshStandardMaterial({ map: texturaSuelo, roughness: 1.0, metalness: 0.0 })
-    );
-    suelo.rotation.x = -Math.PI / 2; 
-    suelo.receiveShadow = true; 
-    scene.add(suelo);
 
-    // --- MONTAÑAS DE FONDO ---
-    const matRoca = new THREE.MeshStandardMaterial({ color: 0x7a8471, flatShading: true, roughness: 0.9 });
-    const matMusgo = new THREE.MeshStandardMaterial({ color: 0x4a5d23, flatShading: true, roughness: 0.9 });
-    for(let i=0; i<25; i++) {
-        const esIzq = i % 2 === 0;
-        const roca = new THREE.Mesh(
-            new THREE.DodecahedronGeometry(20 + Math.random() * 30, 1), 
-            Math.random() > 0.5 ? matRoca : matMusgo
-        );
-        roca.position.set(esIzq ? -100 - Math.random()*80 : 100 + Math.random()*80, 10, (Math.random() - 0.5) * 500);
-        roca.rotation.set(Math.random(), Math.random(), Math.random());
-        roca.castShadow = true; roca.receiveShadow = true; 
-        scene.add(roca);
-    }
-
-    // --- PALMERAS ---
-    const matTronco = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
-    const matHoja = new THREE.MeshStandardMaterial({ color: 0x1f7a1f, flatShading: true, side: THREE.DoubleSide });
-    for (let i = 0; i < 40; i++) {
-        const palmera = new THREE.Group();
-        const puntos = []; for(let j=0; j<=5; j++) puntos.push(new THREE.Vector2(0.5 - j*0.1, j*2));
-        const tronco = new THREE.Mesh(new THREE.LatheGeometry(puntos, 8), matTronco); 
-        tronco.castShadow = true; palmera.add(tronco);
-        
-        for (let j = 0; j < 8; j++) {
-            const hoja = new THREE.Mesh(new THREE.PlaneGeometry(2, 7), matHoja);
-            hoja.position.y = 10; hoja.rotation.x = -Math.PI / 2.5; hoja.rotation.y = (Math.PI * 2 / 8) * j;
-            hoja.position.x = Math.sin((Math.PI * 2 / 8) * j) * 3; hoja.position.z = Math.cos((Math.PI * 2 / 8) * j) * 3;
-            hoja.castShadow = true; palmera.add(hoja);
-        }
-        const lado = Math.random() > 0.5 ? 1 : -1;
-        palmera.position.set(lado * (30 + Math.random() * 60), 0, (Math.random() - 0.5) * 300); 
-        scene.add(palmera);
-    }
-}
-
-function crearCoche() {
-    coche = new THREE.Group();
-
-    // Materiales del coche
-    const matRojo = new THREE.MeshStandardMaterial({ color: 0xd30000, metalness: 0.6, roughness: 0.2 });
-    const matBlanco = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.3 });
-    const matNegro = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.4 });
-    const matCromo = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 1.0, roughness: 0.1 });
-
-    // 1. CHASIS CURVO
-    const cuerpo = new THREE.Mesh(new THREE.CapsuleGeometry(0.9, 2.8, 16, 32), matRojo);
-    cuerpo.rotation.x = Math.PI / 2; cuerpo.rotation.z = Math.PI / 2;
-    cuerpo.position.set(0, 1.2, 0); cuerpo.scale.set(1.6, 1, 0.7);
-    cuerpo.castShadow = true; cuerpo.receiveShadow = true; coche.add(cuerpo);
-
-    // Franja blanca
-    const franja = new THREE.Mesh(new THREE.BoxGeometry(2.9, 1.0, 1.2), matBlanco);
-    franja.position.set(0, 1.2, 1.4); coche.add(franja);
-
-    // 2. JAULA TUBULAR
-    const puntosJaula = [
-        new THREE.Vector3(-1.1, 1.5, -1.6), new THREE.Vector3(-1.1, 3.0, -0.8), new THREE.Vector3(-0.9, 3.2, 0.8), new THREE.Vector3(-0.9, 1.8, 1.6),
-        new THREE.Vector3(0.9, 1.8, 1.6), new THREE.Vector3(0.9, 3.2, 0.8), new THREE.Vector3(1.1, 3.0, -0.8), new THREE.Vector3(1.1, 1.5, -1.6)
-    ];
-    const curvaJaula = new THREE.CatmullRomCurve3(puntosJaula);
-    const jaula = new THREE.Mesh(new THREE.TubeGeometry(curvaJaula, 64, 0.1, 12, false), matNegro);
-    jaula.castShadow = true; coche.add(jaula);
-
-    // 3. MOTOR Y ESCAPES
-    const motor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 1.2), matNegro);
-    motor.position.set(0, 1.5, -1.8); motor.castShadow = true; coche.add(motor);
-
-    const escapeGeo = new THREE.CylinderGeometry(0.12, 0.12, 1.0, 16);
-    const escapeIzq = new THREE.Mesh(escapeGeo, matCromo);
-    escapeIzq.rotation.x = Math.PI / 2; escapeIzq.position.set(-0.6, 1.2, -2.4); coche.add(escapeIzq);
-    const escapeDer = escapeIzq.clone(); escapeDer.position.x = 0.6; coche.add(escapeDer);
-
-    // 4. FAROS
-    const matFaros = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.5 });
-    for(let i=0; i<4; i++){
-        const faro = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.2, 16), matFaros);
-        faro.rotation.x = Math.PI / 2; faro.position.set(-0.75 + i*0.5, 3.2, 0.8); coche.add(faro);
-        }
-
-    // Luz Ambiental y Hemisférica (Cielo y Rebote de Tierra)
-    const ambiente = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambiente = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambiente);
-    const hemisferio = new THREE.HemisphereLight(0xffffff, 0x8b5a2b, 1.2);
+    const hemisferio = new THREE.HemisphereLight(0xffffff, 0x8b5a2b, 1.5);
     scene.add(hemisferio);
 
-    // 4. MAPA DE ENTORNO (PMREM) - Magia para el brillo metálico
+    // MAPA DE ENTORNO (PMREM) - Ahora sí funcionará de maravilla
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     const envScene = new THREE.Scene();
     const envCanvas = document.createElement('canvas');
     envCanvas.width = 512; envCanvas.height = 512;
     const eCtx = envCanvas.getContext('2d');
     const eGrad = eCtx.createLinearGradient(0, 0, 0, 512);
-    eGrad.addColorStop(0, '#ffffff'); // Cielo brillante
-    eGrad.addColorStop(0.5, '#87CEEB'); // Azul
-    eGrad.addColorStop(1, '#e3c28d'); // Arena
+    eGrad.addColorStop(0, '#ffffff'); eGrad.addColorStop(0.5, '#87CEEB'); eGrad.addColorStop(1, '#e3c28d');
     eCtx.fillStyle = eGrad; eCtx.fillRect(0, 0, 512, 512);
     const envTexture = new THREE.CanvasTexture(envCanvas);
     envTexture.mapping = THREE.EquirectangularReflectionMapping;
     const envMap = pmremGenerator.fromEquirectangular(envTexture).texture;
     scene.environment = envMap;
 
-    // Iniciar elementos
     crearEntorno();
     crearCoche();
     crearParticulas();
@@ -286,57 +105,34 @@ function crearCoche() {
     window.addEventListener('resize', onWindowResize);
     animate();
         }
-            function crearEntorno() {
-    // --- SUELO DETALLADO ---
+        function crearEntorno() {
     const canvas = document.createElement('canvas');
     canvas.width = 1024; canvas.height = 1024;
     const ctx = canvas.getContext('2d');
-    
-    // Base de arena
     ctx.fillStyle = '#e3c28d'; ctx.fillRect(0, 0, 1024, 1024); 
-    // Granos de arena
     for (let i = 0; i < 80000; i++) {
         ctx.fillStyle = Math.random() > 0.5 ? '#d1ab70' : '#f0d5ab';
         ctx.fillRect(Math.random() * 1024, Math.random() * 1024, 2, 2);
     }
-    // Camino de tierra
     ctx.fillStyle = '#a87d4b';
-    ctx.beginPath(); 
-    ctx.moveTo(412, 0); ctx.lineTo(612, 0); 
-    ctx.quadraticCurveTo(700, 512, 600, 1024); 
-    ctx.lineTo(424, 1024); 
-    ctx.quadraticCurveTo(324, 512, 412, 0); 
-    ctx.fill();
+    ctx.beginPath(); ctx.moveTo(412, 0); ctx.lineTo(612, 0); ctx.quadraticCurveTo(700, 512, 600, 1024); ctx.lineTo(424, 1024); ctx.quadraticCurveTo(324, 512, 412, 0); ctx.fill();
     
     const texturaSuelo = new THREE.CanvasTexture(canvas);
-    texturaSuelo.wrapS = THREE.RepeatWrapping; texturaSuelo.wrapT = THREE.RepeatWrapping; 
-    texturaSuelo.repeat.set(20, 20);
+    texturaSuelo.wrapS = THREE.RepeatWrapping; texturaSuelo.wrapT = THREE.RepeatWrapping; texturaSuelo.repeat.set(20, 20);
     texturaSuelo.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    
-    const suelo = new THREE.Mesh(
-        new THREE.PlaneGeometry(1000, 1000), 
-        new THREE.MeshStandardMaterial({ map: texturaSuelo, roughness: 1.0, metalness: 0.0 })
-    );
-    suelo.rotation.x = -Math.PI / 2; 
-    suelo.receiveShadow = true; 
-    scene.add(suelo);
+    const suelo = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({ map: texturaSuelo, roughness: 1.0, metalness: 0.0 }));
+    suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; scene.add(suelo);
 
-    // --- MONTAÑAS DE FONDO ---
     const matRoca = new THREE.MeshStandardMaterial({ color: 0x7a8471, flatShading: true, roughness: 0.9 });
     const matMusgo = new THREE.MeshStandardMaterial({ color: 0x4a5d23, flatShading: true, roughness: 0.9 });
     for(let i=0; i<25; i++) {
         const esIzq = i % 2 === 0;
-        const roca = new THREE.Mesh(
-            new THREE.DodecahedronGeometry(20 + Math.random() * 30, 1), 
-            Math.random() > 0.5 ? matRoca : matMusgo
-        );
+        const roca = new THREE.Mesh(new THREE.DodecahedronGeometry(20 + Math.random() * 30, 1), Math.random() > 0.5 ? matRoca : matMusgo);
         roca.position.set(esIzq ? -100 - Math.random()*80 : 100 + Math.random()*80, 10, (Math.random() - 0.5) * 500);
         roca.rotation.set(Math.random(), Math.random(), Math.random());
-        roca.castShadow = true; roca.receiveShadow = true; 
-        scene.add(roca);
+        roca.castShadow = true; roca.receiveShadow = true; scene.add(roca);
     }
 
-    // --- PALMERAS ---
     const matTronco = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
     const matHoja = new THREE.MeshStandardMaterial({ color: 0x1f7a1f, flatShading: true, side: THREE.DoubleSide });
     for (let i = 0; i < 40; i++) {
@@ -344,7 +140,6 @@ function crearCoche() {
         const puntos = []; for(let j=0; j<=5; j++) puntos.push(new THREE.Vector2(0.5 - j*0.1, j*2));
         const tronco = new THREE.Mesh(new THREE.LatheGeometry(puntos, 8), matTronco); 
         tronco.castShadow = true; palmera.add(tronco);
-        
         for (let j = 0; j < 8; j++) {
             const hoja = new THREE.Mesh(new THREE.PlaneGeometry(2, 7), matHoja);
             hoja.position.y = 10; hoja.rotation.x = -Math.PI / 2.5; hoja.rotation.y = (Math.PI * 2 / 8) * j;
@@ -359,24 +154,20 @@ function crearCoche() {
 
 function crearCoche() {
     coche = new THREE.Group();
-
-    // Materiales del coche
     const matRojo = new THREE.MeshStandardMaterial({ color: 0xd30000, metalness: 0.6, roughness: 0.2 });
     const matBlanco = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.3 });
     const matNegro = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.4 });
     const matCromo = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 1.0, roughness: 0.1 });
 
-    // 1. CHASIS CURVO
+    // AQUÍ ESTÁ LA CÁPSULA QUE PEDISTE (Ahora sí funciona)
     const cuerpo = new THREE.Mesh(new THREE.CapsuleGeometry(0.9, 2.8, 16, 32), matRojo);
     cuerpo.rotation.x = Math.PI / 2; cuerpo.rotation.z = Math.PI / 2;
     cuerpo.position.set(0, 1.2, 0); cuerpo.scale.set(1.6, 1, 0.7);
     cuerpo.castShadow = true; cuerpo.receiveShadow = true; coche.add(cuerpo);
 
-    // Franja blanca
     const franja = new THREE.Mesh(new THREE.BoxGeometry(2.9, 1.0, 1.2), matBlanco);
     franja.position.set(0, 1.2, 1.4); coche.add(franja);
 
-    // 2. JAULA TUBULAR
     const puntosJaula = [
         new THREE.Vector3(-1.1, 1.5, -1.6), new THREE.Vector3(-1.1, 3.0, -0.8), new THREE.Vector3(-0.9, 3.2, 0.8), new THREE.Vector3(-0.9, 1.8, 1.6),
         new THREE.Vector3(0.9, 1.8, 1.6), new THREE.Vector3(0.9, 3.2, 0.8), new THREE.Vector3(1.1, 3.0, -0.8), new THREE.Vector3(1.1, 1.5, -1.6)
@@ -385,7 +176,6 @@ function crearCoche() {
     const jaula = new THREE.Mesh(new THREE.TubeGeometry(curvaJaula, 64, 0.1, 12, false), matNegro);
     jaula.castShadow = true; coche.add(jaula);
 
-    // 3. MOTOR Y ESCAPES
     const motor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 1.2), matNegro);
     motor.position.set(0, 1.5, -1.8); motor.castShadow = true; coche.add(motor);
 
@@ -394,61 +184,51 @@ function crearCoche() {
     escapeIzq.rotation.x = Math.PI / 2; escapeIzq.position.set(-0.6, 1.2, -2.4); coche.add(escapeIzq);
     const escapeDer = escapeIzq.clone(); escapeDer.position.x = 0.6; coche.add(escapeDer);
 
-    // 4. FAROS
     const matFaros = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.5 });
     for(let i=0; i<4; i++){
         const faro = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.2, 16), matFaros);
         faro.rotation.x = Math.PI / 2; faro.position.set(-0.75 + i*0.5, 3.2, 0.8); coche.add(faro);
         }
 
-            // 5. EL PILOTO
-    piloto = new THREE.Group();
+            piloto = new THREE.Group();
     
+    // Torso también con cápsula
     const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.5, 8, 16), matRojo);
     torso.position.y = 2.0; torso.castShadow = true; piloto.add(torso);
     
     const franjaTraje = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.7, 0.72), matBlanco);
     franjaTraje.position.set(0, 2.0, 0); piloto.add(franjaTraje);
     
-    // Brazos
     const brazoGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.6, 12);
     const brazoIzq = new THREE.Mesh(brazoGeo, matRojo);
     brazoIzq.position.set(-0.4, 2.1, 0.2); brazoIzq.rotation.x = Math.PI/3; piloto.add(brazoIzq);
     const brazoDer = brazoIzq.clone(); brazoDer.position.x = 0.4; piloto.add(brazoDer);
 
-    // Casco y Visor
     const casco = new THREE.Mesh(new THREE.SphereGeometry(0.45, 32, 32), matRojo);
     casco.position.y = 2.6; casco.castShadow = true; piloto.add(casco);
     
     const visor = new THREE.Mesh(new THREE.SphereGeometry(0.46, 32, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({color: 0x000000, metalness: 0.9, roughness: 0.1}));
     visor.position.set(0, 2.6, 0.05); visor.rotation.x = Math.PI/3; piloto.add(visor);
 
-    // Cara Canvas
     const canvasCara = document.createElement('canvas');
     canvasCara.width = 512; canvasCara.height = 512;
     const ctxF = canvasCara.getContext('2d');
     ctxF.fillStyle = '#ffcc99'; ctxF.fillRect(0,0,512,512);
-    // Ojos
     ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(160, 256, 50, 0, Math.PI*2); ctxF.arc(352, 256, 50, 0, Math.PI*2); ctxF.fill();
     ctxF.fillStyle = '#4a2e15'; ctxF.beginPath(); ctxF.arc(160, 256, 30, 0, Math.PI*2); ctxF.arc(352, 256, 30, 0, Math.PI*2); ctxF.fill();
     ctxF.fillStyle = '#000000'; ctxF.beginPath(); ctxF.arc(160, 256, 15, 0, Math.PI*2); ctxF.arc(352, 256, 15, 0, Math.PI*2); ctxF.fill();
-    // Brillo
     ctxF.fillStyle = '#ffffff'; ctxF.beginPath(); ctxF.arc(145, 235, 10, 0, Math.PI*2); ctxF.arc(337, 235, 10, 0, Math.PI*2); ctxF.fill();
-    // Cejas
     ctxF.strokeStyle = '#4a2e15'; ctxF.lineWidth = 12; ctxF.lineCap = 'round';
     ctxF.beginPath(); ctxF.moveTo(100, 180); ctxF.lineTo(200, 200); ctxF.stroke();
     ctxF.beginPath(); ctxF.moveTo(412, 180); ctxF.lineTo(312, 200); ctxF.stroke();
-    // Sonrisa
     ctxF.beginPath(); ctxF.arc(256, 340, 50, 0, Math.PI); ctxF.stroke();
     
     const texturaCara = new THREE.CanvasTexture(canvasCara);
     const caraMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55), new THREE.MeshBasicMaterial({map: texturaCara, transparent: true}));
     caraMesh.position.set(0, 2.55, 0.4); piloto.add(caraMesh);
-
     coche.add(piloto);
 
-    // 6. RUEDAS
-    const matGoma = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9, metalness: 0.1 });
+    const matGoma = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 });
     const matRin = new THREE.MeshStandardMaterial({ color: 0xd30000, metalness: 0.8, roughness: 0.2 });
     
     const posRuedas = [[-1.4, 0.9, 1.4], [1.4, 0.9, 1.4], [-1.4, 0.9, -1.4], [1.4, 0.9, -1.4]];
@@ -458,8 +238,6 @@ function crearCoche() {
         llanta.rotation.z = Math.PI / 2; llanta.castShadow = true; ruedaG.add(llanta);
         const rin = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.72, 16), matRin);
         rin.rotation.z = Math.PI / 2; ruedaG.add(rin);
-        
-        // Tacos
         for(let t=0; t<12; t++){
             const taco = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.4, 0.75), matGoma);
             taco.position.set(Math.cos(t*Math.PI/6)*0.9, Math.sin(t*Math.PI/6)*0.9, 0);
@@ -468,98 +246,75 @@ function crearCoche() {
         ruedaG.position.set(pos[0], pos[1], pos[2]);
         coche.add(ruedaG); ruedas.push(ruedaG);
     });
-
     scene.add(coche);
-}
-
-function crearParticulas() {
-    // Fuego
-    const geoFuego = new THREE.BufferGeometry();
-    const posF = new Float32Array(150 * 3);
-    const colF = new THREE.Float32BufferAttribute(new Float32Array(150 * 3), 3);
-    for(let i=0; i<150*3; i+=3){
-        posF[i] = 0; posF[i+1] = -10; posF[i+2] = 0;
-        colF.setXYZ(i/3, 1.0, Math.random() * 0.5 + 0.5, 0);
-    }
-    geoFuego.setAttribute('position', new THREE.BufferAttribute(posF, 3));
-    geoFuego.setAttribute('color', colF);
-    fuegoEscape = new THREE.Points(geoFuego, new THREE.PointsMaterial({ size: 0.6, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
-    scene.add(fuegoEscape);
-
-    // Polvo
-    const geoPolvo = new THREE.BufferGeometry();
-    const posP = new Float32Array(100 * 3);
-    for(let i=0; i<100*3; i+=3){
-        posP[i] = 0; posP[i+1] = -10; posP[i+2] = 0;
-    }
-    geoPolvo.setAttribute('position', new THREE.BufferAttribute(posP, 3));
-    particulasPolvo = new THREE.Points(geoPolvo, new THREE.PointsMaterial({ size: 0.8, color: 0xe0c9a6, transparent: true, opacity: 0.5, depthWrite: false }));
-    scene.add(particulasPolvo);
         }
-                    function configurarControles() {
-            const btnGas = document.getElementById('btn-gas');
-            const btnFreno = document.getElementById('btn-freno');
-            const btnIzq = document.getElementById('btn-izq');
-            const btnDer = document.getElementById('btn-der');
+        function crearParticulas() {
+            const geoFuego = new THREE.BufferGeometry();
+            const posF = new Float32Array(150 * 3);
+            const colF = new THREE.Float32BufferAttribute(new Float32Array(150 * 3), 3);
+            for(let i=0; i<150*3; i+=3){
+                posF[i] = 0; posF[i+1] = -10; posF[i+2] = 0;
+                colF.setXYZ(i/3, 1.0, Math.random() * 0.5 + 0.5, 0);
+            }
+            geoFuego.setAttribute('position', new THREE.BufferAttribute(posF, 3));
+            geoFuego.setAttribute('color', colF);
+            fuegoEscape = new THREE.Points(geoFuego, new THREE.PointsMaterial({ size: 0.6, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+            scene.add(fuegoEscape);
 
-            // Eventos para móvil (Touch) y PC (Mouse)
+            const geoPolvo = new THREE.BufferGeometry();
+            const posP = new Float32Array(100 * 3);
+            for(let i=0; i<100*3; i+=3){ posP[i] = 0; posP[i+1] = -10; posP[i+2] = 0; }
+            geoPolvo.setAttribute('position', new THREE.BufferAttribute(posP, 3));
+            particulasPolvo = new THREE.Points(geoPolvo, new THREE.PointsMaterial({ size: 0.8, color: 0xe0c9a6, transparent: true, opacity: 0.5, depthWrite: false }));
+            scene.add(particulasPolvo);
+        }
+
+        function configurarControles() {
+            const btnGas = document.getElementById('btn-gas'), btnFreno = document.getElementById('btn-freno');
+            const btnIzq = document.getElementById('btn-izq'), btnDer = document.getElementById('btn-der');
+
             btnGas.addEventListener('touchstart', (e) => { e.preventDefault(); acelerando = true; });
             btnGas.addEventListener('touchend', (e) => { e.preventDefault(); acelerando = false; });
             btnGas.addEventListener('mousedown', () => acelerando = true);
             btnGas.addEventListener('mouseup', () => acelerando = false);
-            btnGas.addEventListener('mouseleave', () => acelerando = false);
 
             btnFreno.addEventListener('touchstart', (e) => { e.preventDefault(); frenando = true; });
             btnFreno.addEventListener('touchend', (e) => { e.preventDefault(); frenando = false; });
             btnFreno.addEventListener('mousedown', () => frenando = true);
             btnFreno.addEventListener('mouseup', () => frenando = false);
-            btnFreno.addEventListener('mouseleave', () => frenando = false);
 
             btnIzq.addEventListener('touchstart', (e) => { e.preventDefault(); direccion = -1; });
             btnIzq.addEventListener('touchend', (e) => { e.preventDefault(); direccion = 0; });
             btnIzq.addEventListener('mousedown', () => direccion = -1);
             btnIzq.addEventListener('mouseup', () => direccion = 0);
-            btnIzq.addEventListener('mouseleave', () => direccion = 0);
 
             btnDer.addEventListener('touchstart', (e) => { e.preventDefault(); direccion = 1; });
             btnDer.addEventListener('touchend', (e) => { e.preventDefault(); direccion = 0; });
             btnDer.addEventListener('mousedown', () => direccion = 1);
             btnDer.addEventListener('mouseup', () => direccion = 0);
-            btnDer.addEventListener('mouseleave', () => direccion = 0);
         }
 
         function actualizarParticulas(delta) {
-            // Fuego
             if (acelerando && velocidad > 0) {
                 const pos = fuegoEscape.geometry.attributes.position.array;
                 for (let i = 0; i < pos.length; i += 3) {
                     if (pos[i+1] < 0) {
                         pos[i] = coche.position.x + (Math.random() > 0.5 ? 0.6 : -0.6);
-                        pos[i+1] = 1.2;
-                        pos[i+2] = coche.position.z - 2.5; 
-                        break;
+                        pos[i+1] = 1.2; pos[i+2] = coche.position.z - 2.5; break;
                     }
                 }
-                for (let i = 1; i < pos.length; i += 3) {
-                    if (pos[i] > 0) { pos[i] += delta * 2; pos[i+1] -= delta * 6; }
-                }
+                for (let i = 1; i < pos.length; i += 3) { if (pos[i] > 0) { pos[i] += delta * 2; pos[i+1] -= delta * 6; } }
                 fuegoEscape.geometry.attributes.position.needsUpdate = true;
             }
-
-            // Polvo
             if (velocidad > 5) {
                 const pos = particulasPolvo.geometry.attributes.position.array;
                 for (let i = 0; i < pos.length; i += 3) {
                     if (pos[i+1] < 0) {
                         pos[i] = coche.position.x + (Math.random() > 0.5 ? 1.4 : -1.4);
-                        pos[i+1] = 0.2;
-                        pos[i+2] = coche.position.z - 1.5; 
-                        break;
+                        pos[i+1] = 0.2; pos[i+2] = coche.position.z - 1.5; break;
                     }
                 }
-                for (let i = 1; i < pos.length; i += 3) {
-                    if (pos[i] > 0) { pos[i] += delta * 0.5; pos[i+1] -= delta * 1.5; }
-                }
+                for (let i = 1; i < pos.length; i += 3) { if (pos[i] > 0) { pos[i] += delta * 0.5; pos[i+1] -= delta * 1.5; } }
                 particulasPolvo.geometry.attributes.position.needsUpdate = true;
             }
         }
@@ -576,49 +331,28 @@ function crearParticulas() {
             tiempoGlobal += delta;
 
             if (coche) {
-                // 1. FÍSICA DE VELOCIDAD
-                if (acelerando) {
-                    velocidad += ACELERACION * delta;
-                } else if (frenando) {
-                    velocidad -= FRENADO * delta;
-                } else {
-                    velocidad -= 5 * delta; // Fricción natural
-                }
+                if (acelerando) velocidad += ACELERACION * delta;
+                else if (frenando) velocidad -= FRENADO * delta;
+                else velocidad -= 5 * delta;
 
-                // Limitar velocidad
                 if (velocidad > VELOCIDAD_MAXIMA) velocidad = VELOCIDAD_MAXIMA;
                 if (velocidad < 0) velocidad = 0;
 
-                // 2. FÍSICA DE DIRECCIÓN
-                if (direccion !== 0 && velocidad > 1) {
-                    // Girar el coche dependiendo de la velocidad
-                    coche.rotation.y -= direccion * VELOCIDAD_GIRO * delta * (velocidad / 10);
-                }
+                if (direccion !== 0 && velocidad > 1) coche.rotation.y -= direccion * VELOCIDAD_GIRO * delta * (velocidad / 10);
 
-                // 3. MOVIMIENTO Y VIBRACIÓN
                 const movimientoZ = Math.cos(coche.rotation.y) * velocidad * delta;
                 const movimientoX = Math.sin(coche.rotation.y) * velocidad * delta;
                 coche.position.z += movimientoZ;
                 coche.position.x -= movimientoX;
 
-                // Vibración por el terreno
                 coche.position.y = Math.sin(tiempoGlobal * 20) * 0.03;
                 coche.rotation.z = Math.sin(tiempoGlobal * 15) * 0.01;
 
-                // 4. ROTACIÓN DE RUEDAS Y VOLANTE
                 ruedas.forEach(r => r.children[0].rotation.x += velocidad * delta * 1.5);
-                
-                // Girar ruedas delanteras visualmente
-                if (ruedas.length >= 2) {
-                    ruedas[0].rotation.y = direccion * 0.5;
-                    ruedas[1].rotation.y = direccion * 0.5;
-                }
+                if (ruedas.length >= 2) { ruedas[0].rotation.y = direccion * 0.5; ruedas[1].rotation.y = direccion * 0.5; }
 
-                // 5. CÁMARA
-                // La cámara sigue la rotación y posición del coche
                 const offsetCamara = new THREE.Vector3(0, 4.5, -9);
                 offsetCamara.applyAxisAngle(new THREE.Vector3(0, 1, 0), coche.rotation.y);
-                
                 const targetCamara = new THREE.Vector3().copy(coche.position).add(offsetCamara);
                 camera.position.lerp(targetCamara, 0.1);
                 
@@ -626,15 +360,12 @@ function crearParticulas() {
                 lookAtPos.y += 1.5;
                 camera.lookAt(lookAtPos);
 
-                // 6. PARTÍCULAS
                 actualizarParticulas(delta);
             }
             renderer.render(scene, camera);
         }
-
-        // Arrancar el juego
         init();
     </script>
 </body>
 </html>
-            
+        
