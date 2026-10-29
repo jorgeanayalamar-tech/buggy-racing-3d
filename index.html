@@ -1,399 +1,297 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Buggy Racing 3D - Pro Edition</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { overflow: hidden; background: #87CEEB; font-family: 'Arial Black', Impact, sans-serif; touch-action: none; user-select: none; }
-  #game-container { width: 100vw; height: 100vh; }
-  #ui-layer { position: fixed; inset: 0; pointer-events: none; }
-  
-  /* HUD Superior (Idéntico a la foto) */
-  #top-ui { position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); display: flex; justify-content: space-between; align-items: flex-start; }
-  .ui-text { color: white; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-size: 16px; display: flex; flex-direction: column; align-items: center; font-family: 'Arial Black', sans-serif;}
-  .ui-text span { font-size: 34px; line-height: 1; }
-  
-  #progress-container { flex-grow: 1; margin: 15px 15px 0 15px; background: rgba(0,0,0,0.6); height: 14px; border-radius: 7px; border: 2px solid #333; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-  #progress-bar { height: 100%; background: #0055FF; width: 0%; border-radius: 5px; border-right: 2px solid #00BFFF; }
-  
-  /* Controles (Estilo metálico de la foto) */
-  .controls { position: absolute; bottom: 20px; display: flex; width: 100%; justify-content: space-between; padding: 0 15px; pointer-events: none; }
-  .btn-group { display: flex; gap: 10px; pointer-events: auto; }
-  .control-btn { width: 75px; height: 75px; background: rgba(180, 180, 180, 0.5); border: 3px solid #DDD; border-radius: 15px; color: #222; font-size: 28px; display: flex; justify-content: center; align-items: center; font-weight: bold; box-shadow: 0 5px 0 rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
-  .control-btn:active { background: rgba(255, 255, 255, 0.8); transform: translateY(5px); box-shadow: none; }
-  
-  #start-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.7); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; z-index: 10; }
-  #start-screen h1 { font-size: 38px; margin-bottom: 20px; text-shadow: 4px 4px 0 #FF0000, 8px 8px 0 #000; color: #FFD700; text-align: center; transform: rotate(-5deg); }
-  #start-btn { padding: 15px 50px; font-size: 24px; background: #FF4500; color: white; border: 4px solid #FFD700; border-radius: 15px; font-weight: bold; box-shadow: 0 8px 0 #8B0000; }
-  #start-btn:active { transform: translateY(8px); box-shadow: 0 0px 0 #8B0000; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beach Buggy - Parte 1</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Arial Black', sans-serif; }
+        canvas { display: block; }
+        
+        /* INTERFAZ (HUD) */
+        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; pointer-events: none; }
+        .panel { background: rgba(0,0,0,0.5); color: white; padding: 10px 20px; border-radius: 10px; border: 3px solid white; text-shadow: 2px 2px 0 #000; }
+        
+        /* CONTROLES TÁCTILES ESTILO 3D */
+        #controles { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; }
+        .btn-grupo { display: flex; gap: 10px; }
+        .btn {
+            width: 80px; height: 80px; border-radius: 20px; border: 4px solid; color: white;
+            font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center;
+            user-select: none; touch-action: manipulation; text-shadow: 1px 1px 0 #000;
+        }
+        .btn-izq { background-color: #d3c5b5; border-color: #a89b8c; box-shadow: 0 6px 0 #8c7f73; }
+        .btn-freno { background-color: #f05a28; border-color: #b83d15; box-shadow: 0 6px 0 #8c2e10; }
+        .btn-gas { background-color: #4CAF50; border-color: #2E7D32; box-shadow: 0 6px 0 #1B5E20; }
+        .btn:active { box-shadow: 0 2px 0; transform: translateY(4px); }
+    </style>
 </head>
 <body>
-<div id="game-container"></div>
-<div id="ui-layer">
-  <div id="top-ui">
-    <div class="ui-text">PUESTO <span>1/6</span></div>
-    <div id="progress-container"><div id="progress-bar"></div></div>
-    <div class="ui-text">VUELTA <span>1/1</span></div>
-  </div>
 
-  <div class="controls">
-    <div class="btn-group">
-      <div class="control-btn" id="btn-left">◄</div>
-      <div class="control-btn" id="btn-right">►</div>
+    <!-- Interfaz de Usuario -->
+    <div id="hud">
+        <div class="panel">PUESTO 1/6</div>
+        <div class="panel">VUELTA 1/1</div>
     </div>
-    <div class="btn-group">
-      <div class="control-btn" id="btn-brake" style="font-size:14px; background: rgba(255, 69, 0, 0.6); color: white;">FRENO</div>
-      <div class="control-btn" id="btn-gas" style="background: rgba(0, 255, 0, 0.6); font-size:14px; color: white;">GAS</div>
+
+    <div id="controles">
+        <div class="btn-grupo">
+            <div class="btn btn-izq">◀</div>
+            <div class="btn btn-izq">▶</div>
+        </div>
+        <div class="btn-grupo">
+            <div class="btn btn-freno">FRENO</div>
+            <div class="btn btn-gas">GAS</div>
+        </div>
     </div>
-  </div>
-  
-  <div id="start-screen">
-    <h1>BUGGY RACING 3D</h1>
-    <button id="start-btn">JUGAR</button>
-  </div>
-</div>
 
-<script type="importmap">
-{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
-</script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-<script type="module">
-import * as THREE from 'three';
+    <script>
+        let scene, camera, renderer, reloj;
+        // (Las variables del coche y polvo se usarán en la Parte 2)
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x4FC3F7);
-scene.fog = new THREE.Fog(0x4FC3F7, 200, 600); // Niebla para dar profundidad a los acantilados
+        function init() {
+            // 1. CONFIGURACIÓN BÁSICA Y NIEBLA
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 40, 150); 
 
-const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.getElementById('game-container').appendChild(renderer.domElement);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 8, -12);
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true; // ACTIVAR SOMBRAS
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
 
-// LUCES
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0xE8C37D, 1.2); scene.add(hemiLight);
-const dirLight = new THREE.DirectionalLight(0xfff5d1, 2.5);
-dirLight.position.set(100, 200, 50); dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 2048; dirLight.shadow.mapSize.height = 2048;
-dirLight.shadow.camera.left = -200; dirLight.shadow.camera.right = 200;
-dirLight.shadow.camera.top = 200; dirLight.shadow.camera.bottom = -200;
-scene.add(dirLight);
+            reloj = new THREE.Clock();
 
-// --- MAR CON OLAS ---
-const waterGeo = new THREE.PlaneGeometry(3000, 3000, 64, 64);
-const waterMat = new THREE.MeshStandardMaterial({ color: 0x00BFFF, roughness: 0.1, metalness: 0.3, flatShading: true });
-const water = new THREE.Mesh(waterGeo, waterMat);
-water.rotation.x = -Math.PI / 2; water.position.y = -2.0; water.receiveShadow = true; scene.add(water);
-const waterPositions = waterGeo.attributes.position.array;
-const waterInitialY = Float32Array.from(waterPositions.filter((_, i) => i % 3 === 1));
+            // 2. LUCES (Sol y Luz Ambiental)
+            const sol = new THREE.DirectionalLight(0xfff5e6, 1.5);
+            sol.position.set(30, 40, 20);
+            sol.castShadow = true;
+            sol.shadow.mapSize.width = 2048;
+            sol.shadow.mapSize.height = 2048;
+            sol.shadow.camera.near = 0.5;
+            sol.shadow.camera.far = 150;
+            sol.shadow.camera.left = -50;
+            sol.shadow.camera.right = 50;
+            sol.shadow.camera.top = 50;
+            sol.shadow.camera.bottom = -50;
+            scene.add(sol);
 
-// --- PISTA DE TIERRA ---
-const trackCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(0, 0, 0), new THREE.Vector3(40, 0, -80), new THREE.Vector3(120, 0, -100),
-  new THREE.Vector3(160, 0, -20), new THREE.Vector3(140, 0, 80), new THREE.Vector3(60, 0, 120),
-  new THREE.Vector3(-40, 0, 120), new THREE.Vector3(-100, 0, 40), new THREE.Vector3(-80, 0, -60),
-  new THREE.Vector3(-30, 0, -100)
-], true, 'catmullrom', 0.5);
+            const ambiente = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+            scene.add(ambiente);
 
-const trackGeo = new THREE.BufferGeometry(); const posArray = [], indexArray = [], uvArray = [];
-for (let i = 0; i <= 300; i++) {
-  const t = i / 300; const p = trackCurve.getPointAt(t); const tangent = trackCurve.getTangentAt(t).normalize();
-  const right = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize();
-  posArray.push(p.x - right.x*15, 0.02, p.z - right.z*15, p.x + right.x*15, 0.02, p.z + right.z*15);
-  uvArray.push(0, t*30, 1, t*30);
-  if (i < 300) { const a = i*2; const b = i*2+1; const c = i*2+2; const d = i*2+3; indexArray.push(a, c, b, b, c, d); }
-}
-trackGeo.setAttribute('position', new THREE.Float32BufferAttribute(posArray, 3));
-trackGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArray, 2));
-trackGeo.setIndex(indexArray); trackGeo.computeVertexNormals();
+            // 3. CREAR PAISAJE
+            crearEntorno();
+            
+            // (La Parte 2 se encargará de llamar a crearCoche() y animar)
+        }
 
-// Textura de tierra con surcos
-const sandCanvas = document.createElement('canvas'); sandCanvas.width = 512; sandCanvas.height = 512;
-const sCtx = sandCanvas.getContext('2d'); sCtx.fillStyle = '#C19A6B'; sCtx.fillRect(0, 0, 512, 512);
-for(let i=0; i<8000; i++) { sCtx.fillStyle = Math.random() > 0.5 ? '#A67B5B' : '#D2B48C'; sCtx.fillRect(Math.random()*512, Math.random()*512, 3, 3); }
-// Surcos
-sCtx.strokeStyle = 'rgba(0,0,0,0.1)'; sCtx.lineWidth = 8;
-for(let i=0; i<512; i+=64) { sCtx.beginPath(); sCtx.moveTo(i, 0); sCtx.bezierCurveTo(i+20, 256, i-20, 256, i, 512); sCtx.stroke(); }
-const sandTex = new THREE.CanvasTexture(sandCanvas); sandTex.wrapS = THREE.RepeatWrapping; sandTex.wrapT = THREE.RepeatWrapping;
-const trackMesh = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({ map: sandTex, roughness: 1, side: THREE.DoubleSide }));
-trackMesh.receiveShadow = true; scene.add(trackMesh);
+        function crearEntorno() {
+            // --- SUELO DE ARENA CON TEXTURA ---
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#d9b382'; ctx.fillRect(0, 0, 512, 512);
+            for (let i = 0; i < 10000; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#c49a66' : '#ebd1a8';
+                ctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
+            }
+            const texturaArena = new THREE.CanvasTexture(canvas);
+            texturaArena.wrapS = THREE.RepeatWrapping;
+            texturaArena.wrapT = THREE.RepeatWrapping;
+            texturaArena.repeat.set(50, 50);
 
-// Base de la isla
-const island = new THREE.Mesh(new THREE.CylinderGeometry(350, 360, 4, 64), new THREE.MeshStandardMaterial({ color: 0xC19A6B, roughness: 1 }));
-island.position.y = -2; island.receiveShadow = true; scene.add(island);
+            const geoSuelo = new THREE.PlaneGeometry(500, 500);
+            const matSuelo = new THREE.MeshStandardMaterial({ map: texturaArena, roughness: 1 });
+            const suelo = new THREE.Mesh(geoSuelo, matSuelo);
+            suelo.rotation.x = -Math.PI / 2;
+            suelo.receiveShadow = true; 
+            scene.add(suelo);
 
-// --- ACANTILADOS (Rodean la isla para encerrar la pista) ---
-const rockMat = new THREE.MeshStandardMaterial({ color: 0x7A8B8B, roughness: 0.9, flatShading: true });
-for (let i = 0; i < 60; i++) {
-  const size = 40 + Math.random() * 50;
-  const rockGeo = new THREE.DodecahedronGeometry(size, 1);
-  // Deformar roca para hacerla más afilada
-  const pos = rockGeo.attributes.position;
-  for(let j=0; j<pos.count; j++) {
-    pos.setXYZ(j, pos.getX(j)*(0.8+Math.random()*0.6), pos.getY(j)*(1.2+Math.random()*0.8), pos.getZ(j)*(0.8+Math.random()*0.6));
-  }
-  rockGeo.computeVertexNormals();
-  
-  const rock = new THREE.Mesh(rockGeo, rockMat);
-  const angle = (i / 60) * Math.PI * 2;
-  const dist = 280 + Math.random() * 40;
-  rock.position.set(Math.cos(angle)*dist, size/2 - 10, Math.sin(angle)*dist);
-  rock.rotation.set(Math.random(), Math.random(), Math.random());
-  rock.castShadow = true; rock.receiveShadow = true; scene.add(rock);
-}
+            // --- AGUA ---
+            const geoAgua = new THREE.PlaneGeometry(1000, 1000);
+            const matAgua = new THREE.MeshStandardMaterial({ color: 0x0077be, transparent: true, opacity: 0.8, roughness: 0.1, metalness: 0.5 });
+            const agua = new THREE.Mesh(geoAgua, matAgua);
+            agua.rotation.x = -Math.PI / 2;
+            agua.position.y = -0.5;
+            agua.position.x = 50;
+            scene.add(agua);
 
-// --- PALMERAS Y ARBUSTOS ---
-const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5C4033, roughness: 1 });
-const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.8, side: THREE.DoubleSide });
-for (let i = 0; i < 120; i++) {
-  let x = (Math.random() - 0.5) * 500; let z = (Math.random() - 0.5) * 500;
-  if (Math.sqrt(x*x + z*z) > 260 || Math.sqrt(x*x + z*z) < 80) continue;
-  const palm = new THREE.Group();
-  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3((Math.random()-0.5)*4, 6, 0), new THREE.Vector3((Math.random()-0.5)*8, 14, 0)]);
-  const trunk = new THREE.Mesh(new THREE.TubeGeometry(curve, 8, 0.6, 6, false), trunkMat); trunk.castShadow = true; palm.add(trunk);
-  for(let j=0; j<8; j++) {
-    const leaf = new THREE.Mesh(new THREE.ConeGeometry(1.5, 7, 4), leafMat);
-    leaf.position.copy(curve.getPointAt(1)); leaf.rotation.z = Math.PI / 2.2; leaf.rotation.y = (j * Math.PI) / 4;
-    leaf.castShadow = true; palm.add(leaf);
-  }
-  palm.position.set(x, 0, z); palm.rotation.y = Math.random() * Math.PI; scene.add(palm);
-}
- // --- BUGGY (Modelo Detallado con Humo y Llamas) ---
-const buggy = new THREE.Group();
-const bodyMat = new THREE.MeshStandardMaterial({ color: 0xCC0000, roughness: 0.3, metalness: 0.4 }); // Rojo
-const darkMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
-const metalMat = new THREE.MeshStandardMaterial({ color: 0xCCCCCC, metalness: 0.9, roughness: 0.2 });
-const skinMat = new THREE.MeshStandardMaterial({ color: 0xFFCC80 });
-const hairMat = new THREE.MeshStandardMaterial({ color: 0x880000, flatShading: true });
+            // --- ROCAS (Montañas) ---
+            const geoRoca = new THREE.DodecahedronGeometry(10, 0);
+            const matRoca = new THREE.MeshStandardMaterial({ color: 0x6b705c, flatShading: true });
+            for(let i=0; i<10; i++) {
+                const roca = new THREE.Mesh(geoRoca, matRoca);
+                roca.position.set((Math.random() - 0.5) * 100, 5, 60 + Math.random() * 20);
+                roca.rotation.set(Math.random(), Math.random(), Math.random());
+                roca.scale.set(1 + Math.random(), 1 + Math.random(), 1 + Math.random());
+                roca.castShadow = true;
+                roca.receiveShadow = true;
+                scene.add(roca);
+            }
 
-// Textura de llamas
-const flameCanvas = document.createElement('canvas'); flameCanvas.width = 256; flameCanvas.height = 256;
-const fCtx = flameCanvas.getContext('2d');
-fCtx.fillStyle = '#CC0000'; fCtx.fillRect(0,0,256,256);
-fCtx.fillStyle = '#FFD700';
-fCtx.beginPath(); fCtx.moveTo(0, 256); fCtx.bezierCurveTo(60, 100, 120, 200, 128, 50); fCtx.bezierCurveTo(136, 200, 196, 100, 256, 256); fCtx.fill();
-const flameTex = new THREE.CanvasTexture(flameCanvas);
+            // --- PALMERAS ---
+            const matTronco = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
+            const matHoja = new THREE.MeshStandardMaterial({ color: 0x2e8b57, flatShading: true });
+            
+            for (let i = 0; i < 15; i++) {
+                const palmera = new THREE.Group();
+                
+                const tronco = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 5), matTronco);
+                tronco.position.y = 2.5;
+                tronco.castShadow = true;
+                palmera.add(tronco);
 
-// Chasis
-const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.7, 3.8), bodyMat);
-chassis.position.y = 0.9; chassis.castShadow = true; buggy.add(chassis);
+                for (let j = 0; j < 6; j++) {
+                    const hoja = new THREE.Mesh(new THREE.ConeGeometry(1, 4, 4), matHoja);
+                    hoja.position.y = 5;
+                    hoja.rotation.z = Math.PI / 3;
+                    hoja.rotation.y = (Math.PI * 2 / 6) * j;
+                    hoja.position.x = Math.sin((Math.PI * 2 / 6) * j) * 1.5;
+                    hoja.position.z = Math.cos((Math.PI * 2 / 6) * j) * 1.5;
+                    hoja.rotation.x = Math.PI / 4;
+                    hoja.castShadow = true;
+                    palmera.add(hoja);
+                }
+                
+                palmera.position.set((Math.random() - 0.5) * 100, 0, (Math.random() - 0.5) * 100);
+                scene.add(palmera);
+            }
+        }
 
-// Capó con llamas
-const hood = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.3, 1.6), new THREE.MeshStandardMaterial({ map: flameTex, roughness: 0.2 }));
-hood.position.set(0, 1.25, 0.8); buggy.add(hood);
+                // --- AQUÍ EMPIEZA LA PARTE 2 ---
+        let coche, ruedas = [], polvo;
+        let velocidad = 0;
 
-// Jaula Antivuelco
-const cageGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.8, 8);
-const cage1 = new THREE.Mesh(cageGeo, metalMat); cage1.position.set(-0.9, 1.7, -0.5); cage1.rotation.x = 0.2; buggy.add(cage1);
-const cage2 = new THREE.Mesh(cageGeo, metalMat); cage2.position.set(0.9, 1.7, -0.5); cage2.rotation.x = 0.2; buggy.add(cage2);
-const cage3 = new THREE.Mesh(cageGeo, metalMat); cage3.position.set(0, 2.6, -0.5); cage3.rotation.z = Math.PI/2; buggy.add(cage3);
+        function crearCoche() {
+            coche = new THREE.Group();
 
-// Motor y Tubos de Escape
-const engine = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 0.8), darkMat);
-engine.position.set(0, 1.2, -1.6); engine.castShadow = true; buggy.add(engine);
+            // Carrocería
+            const geoCuerpo = new THREE.BoxGeometry(3, 1, 4.5);
+            const matCuerpo = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.3, metalness: 0.2 });
+            const cuerpo = new THREE.Mesh(geoCuerpo, matCuerpo);
+            cuerpo.position.y = 1;
+            cuerpo.castShadow = true;
+            coche.add(cuerpo);
 
-const exhaustGeo = new THREE.CylinderGeometry(0.1, 0.15, 0.8, 8);
-const exhaust1 = new THREE.Mesh(exhaustGeo, metalMat); exhaust1.position.set(-0.5, 0.9, -2.0); exhaust1.rotation.x = Math.PI/2; buggy.add(exhaust1);
-const exhaust2 = new THREE.Mesh(exhaustGeo, metalMat); exhaust2.position.set(0.5, 0.9, -2.0); exhaust2.rotation.x = Math.PI/2; buggy.add(exhaust2);
+            // Cabina
+            const geoCabina = new THREE.BoxGeometry(2, 1, 2);
+            const matCabina = new THREE.MeshStandardMaterial({ color: 0x222222 });
+            const cabina = new THREE.Mesh(geoCabina, matCabina);
+            cabina.position.set(0, 2, 0.5);
+            cabina.castShadow = true;
+            coche.add(cabina);
 
-// Conductor
-const driver = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.7), darkMat);
-driver.position.set(0, 1.6, -0.2); buggy.add(driver);
-const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), skinMat);
-head.position.set(0, 2.2, -0.2); buggy.add(head);
-// Pelo
-for(let i=0; i<6; i++) {
-  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.6, 4), hairMat);
-  spike.position.set((Math.random()-0.5)*0.4, 2.5, -0.2 + (Math.random()-0.5)*0.4);
-  spike.rotation.set(Math.random(), Math.random(), Math.random());
-  buggy.add(spike);
-}
+            // Ruedas
+            const geoRueda = new THREE.CylinderGeometry(0.8, 0.8, 0.6, 16);
+            const matRueda = new THREE.MeshStandardMaterial({ color: 0x111111 });
+            
+            const posicionesRuedas = [
+                [-1.6, 0.8, 1.5], [1.6, 0.8, 1.5], // Delanteras
+                [-1.6, 0.8, -1.5], [1.6, 0.8, -1.5] // Traseras
+            ];
 
-// Ruedas con textura de neumático
-const wheelGeoF = new THREE.CylinderGeometry(0.7, 0.7, 0.7, 16); wheelGeoF.rotateZ(Math.PI / 2);
-const wheelGeoR = new THREE.CylinderGeometry(1.0, 1.0, 0.9, 16); wheelGeoR.rotateZ(Math.PI / 2);
-const wheels = [];
-const tireMat = new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 1 });
+            posicionesRuedas.forEach(pos => {
+                const rueda = new THREE.Mesh(geoRueda, matRueda);
+                rueda.rotation.z = Math.PI / 2;
+                rueda.position.set(pos[0], pos[1], pos[2]);
+                rueda.castShadow = true;
+                coche.add(rueda);
+                ruedas.push(rueda);
+            });
 
-const wheelPositions = [
-  { x: -1.3, y: 0.7, z: 1.3, geo: wheelGeoF }, { x: 1.3, y: 0.7, z: 1.3, geo: wheelGeoF },
-  { x: -1.4, y: 1.0, z: -1.4, geo: wheelGeoR }, { x: 1.4, y: 1.0, z: -1.4, geo: wheelGeoR }
-];
+            scene.add(coche);
+        }
 
-wheelPositions.forEach(pos => {
-  const wg = new THREE.Group();
-  const tire = new THREE.Mesh(pos.geo, tireMat); tire.castShadow = true; wg.add(tire);
-  const rim = new THREE.Mesh(new THREE.CylinderGeometry(pos.geo.parameters.radiusTop*0.6, pos.geo.parameters.radiusTop*0.6, pos.geo.parameters.height+0.1, 8), metalMat);
-  rim.rotation.z = Math.PI / 2; wg.add(rim);
-  wg.position.set(pos.x, pos.y, pos.z);
-  buggy.add(wg);
-  wheels.push(wg);
-});
-scene.add(buggy);
+        function crearPolvo() {
+            const cantidad = 50;
+            const geo = new THREE.BufferGeometry();
+            const posiciones = new Float32Array(cantidad * 3);
+            
+            for(let i=0; i<cantidad*3; i+=3){
+                posiciones[i] = 0;
+                posiciones[i+1] = -10;
+                posiciones[i+2] = 0;
+            }
+            
+            geo.setAttribute('position', new THREE.BufferAttribute(posiciones, 3));
+            
+            const mat = new THREE.PointsMaterial({
+                color: 0xe0c9a6,
+                size: 0.8,
+                transparent: true,
+                opacity: 0.6,
+                depthWrite: false
+            });
+            
+            polvo = new THREE.Points(geo, mat);
+            scene.add(polvo);
+        }
 
-// --- FÍSICA Y CONTROLES ---
-let speed = 0; const maxSpeed = 35;
-let steer = 0; let carAngle = 0; let isPlaying = false;
-const keys = { gas: false, brake: false, left: false, right: false };
+        function actualizarPolvo() {
+            if (velocidad > 0.05) {
+                const posiciones = polvo.geometry.attributes.position.array;
+                for (let i = 0; i < posiciones.length; i += 3) {
+                    if (posiciones[i+1] < 0) {
+                        posiciones[i] = coche.position.x + (Math.random() - 0.5) * 1.5;
+                        posiciones[i+1] = 0.2;
+                        posiciones[i+2] = coche.position.z - 2.5; 
+                        break;
+                    }
+                }
+                for (let i = 1; i < posiciones.length; i += 3) {
+                    if (posiciones[i] > 0) {
+                        posiciones[i] -= 0.05;
+                    }
+                }
+                polvo.geometry.attributes.position.needsUpdate = true;
+            }
+        }
 
-function bindBtn(id, key) {
-  const el = document.getElementById(id);
-  const down = (e) => { e.preventDefault(); keys[key] = true; el.style.transform = 'scale(0.95)'; };
-  const up = (e) => { e.preventDefault(); keys[key] = false; el.style.transform = 'scale(1)'; };
-  el.addEventListener('pointerdown', down); el.addEventListener('pointerup', up);
-  el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
-}
-bindBtn('btn-gas', 'gas'); bindBtn('btn-brake', 'brake'); bindBtn('btn-left', 'left'); bindBtn('btn-right', 'right');
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
 
-// --- PARTÍCULAS (Polvo y Humo de Escape) ---
-function createParticleTexture() {
-  const c = document.createElement('canvas'); c.width=32; c.height=32;
-  const ctx = c.getContext('2d'); 
-  const grad = ctx.createRadialGradient(16,16,0,16,16,16);
-  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad; ctx.fillRect(0,0,32,32);
-  return new THREE.CanvasTexture(c);
-}
-const pTex = createParticleTexture();
+        function animate() {
+            requestAnimationFrame(animate);
 
-// Polvo
-const dustGeo = new THREE.BufferGeometry();
-const dustCount = 100;
-const dustPositions = new Float32Array(dustCount * 3);
-const dustVelocities = [];
-for(let i=0; i<dustCount; i++) { dustPositions[i*3+1] = -50; dustVelocities.push({x:0, y:0, z:0, life:0}); }
-dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-const dustMat = new THREE.PointsMaterial({ color: 0xD2B48C, size: 2.0, transparent: true, opacity: 0.6, map: pTex });
-const dustParticles = new THREE.Points(dustGeo, dustMat); scene.add(dustParticles);
+            const delta = reloj.getDelta();
 
-// Humo de escape
-const smokeGeo = new THREE.BufferGeometry();
-const smokeCount = 50;
-const smokePositions = new Float32Array(smokeCount * 3);
-const smokeVelocities = [];
-for(let i=0; i<smokeCount; i++) { smokePositions[i*3+1] = -50; smokeVelocities.push({x:0, y:0, z:0, life:0}); }
-smokeGeo.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
-const smokeMat = new THREE.PointsMaterial({ color: 0x333333, size: 1.5, transparent: true, opacity: 0.5, map: pTex });
-const smokeParticles = new THREE.Points(smokeGeo, smokeMat); scene.add(smokeParticles);
+            // Movimiento automático para probar las físicas
+            velocidad = 15; 
+            coche.position.z += velocidad * delta;
+            
+            // Rotar ruedas
+            ruedas.forEach(r => r.rotation.x += velocidad * delta);
 
-// --- BUCLE PRINCIPAL ---
-let lastTime = performance.now();
-let time = 0;
+            // Seguir al coche con la cámara
+            camera.position.x = coche.position.x;
+            camera.position.z = coche.position.z - 12;
+            camera.lookAt(coche.position.x, coche.position.y + 1, coche.position.z + 5);
 
-function animate() {
-  requestAnimationFrame(animate);
-  const now = performance.now();
-  const dt = Math.min((now - lastTime) / 1000, 0.1);
-  lastTime = now;
-  time += dt;
+            actualizarPolvo();
 
-  // Animar olas
-  for (let i = 0; i < waterPositions.length; i += 3) {
-    waterPositions[i+1] = waterInitialY[i/3] + Math.sin(waterPositions[i]*0.02 + time) * 1.5 + Math.cos(waterPositions[i+2]*0.02 + time) * 1.5;
-  }
-  waterGeo.attributes.position.needsUpdate = true;
-  waterGeo.computeVertexNormals();
+            renderer.render(scene, camera);
+        }
 
-  if (isPlaying) {
-    // Física
-    if (keys.gas) speed += 30 * dt;
-    else if (keys.brake) speed -= 45 * dt;
-    else speed -= 10 * dt;
-    speed = Math.max(0, Math.min(speed, maxSpeed));
+        // --- ARRANQUE FINAL ---
+        // Se llama a crearCoche y crearPolvo aquí, después de definirlos
+        window.addEventListener('resize', onWindowResize);
+        crearCoche(); 
+        crearPolvo();
+        animate(); 
+        init(); // Inicializa el escenario de la Parte 1
 
-    if (speed > 1) {
-      if (keys.left) steer = 2.5 * dt;
-      else if (keys.right) steer = -2.5 * dt;
-      else steer = 0;
-    } else steer = 0;
-
-    carAngle += steer * (speed / maxSpeed);
-    
-    buggy.position.x += Math.sin(carAngle) * speed * dt;
-    buggy.position.z += Math.cos(carAngle) * speed * dt;
-    buggy.rotation.y = carAngle;
-
-    // Animación de ruedas
-    wheels.forEach(w => w.rotation.x += speed * dt * 2);
-
-    // Cámara
-    const targetPos = buggy.position.clone().add(new THREE.Vector3(Math.sin(carAngle)*-16, 7, Math.cos(carAngle)*-16));
-    camera.position.lerp(targetPos, 0.1);
-    camera.lookAt(buggy.position.clone().add(new THREE.Vector3(0, 2, 0)));
-
-    // Progreso
-    let closestT = 0; let minDist = 9999;
-    for(let t = 0; t <= 1; t += 0.01) {
-      const d = trackCurve.getPointAt(t).distanceTo(buggy.position);
-      if(d < minDist) { minDist = d; closestT = t; }
-    }
-    document.getElementById('progress-bar').style.width = (closestT * 100) + '%';
-
-    // --- SISTEMA DE PARTÍCULAS ---
-    const dPos = dustGeo.attributes.position.array;
-    const sPos = smokeGeo.attributes.position.array;
-    
-    // Generar polvo (ruedas traseras)
-    if (speed > 5 && Math.random() > 0.4) {
-      let idx = Math.floor(Math.random() * dustCount);
-      dPos[idx*3] = buggy.position.x - Math.sin(carAngle)*1.8 + (Math.random()-0.5)*2;
-      dPos[idx*3+1] = 0.3;
-      dPos[idx*3+2] = buggy.position.z - Math.cos(carAngle)*1.8 + (Math.random()-0.5)*2;
-      dustVelocities[idx] = { x: (Math.random()-0.5)*2, y: Math.random()*2, z: (Math.random()-0.5)*2, life: 1.0 };
-    }
-    // Generar humo (escape)
-    if (Math.random() > 0.2) {
-      let idx = Math.floor(Math.random() * smokeCount);
-      // Calcular posición del escape trasero
-      const localOffset = new THREE.Vector3((Math.random()-0.5)*1.2, 0.9, -2.2);
-      localOffset.applyAxisAngle(new THREE.Vector3(0,1,0), carAngle);
-      sPos[idx*3] = buggy.position.x + localOffset.x;
-      sPos[idx*3+1] = localOffset.y;
-      sPos[idx*3+2] = buggy.position.z + localOffset.z;
-      smokeVelocities[idx] = { x: (Math.random()-0.5)*1, y: Math.random()*1.5, z: (Math.random()-0.5)*1, life: 0.8 };
-    }
-
-    // Actualizar Polvo
-    for(let i=0; i<dustCount; i++) {
-      let v = dustVelocities[i];
-      if (v.life > 0) {
-        dPos[i*3] += v.x * dt; dPos[i*3+1] += v.y * dt; dPos[i*3+2] += v.z * dt;
-        v.life -= dt;
-      } else { dPos[i*3+1] = -50; }
-    }
-    dustGeo.attributes.position.needsUpdate = true;
-
-    // Actualizar Humo
-    for(let i=0; i<smokeCount; i++) {
-      let v = smokeVelocities[i];
-      if (v.life > 0) {
-        sPos[i*3] += v.x * dt; sPos[i*3+1] += v.y * dt; sPos[i*3+2] += v.z * dt;
-        v.life -= dt;
-      } else { sPos[i*3+1] = -50; }
-    }
-    smokeGeo.attributes.position.needsUpdate = true;
-  }
-
-  renderer.render(scene, camera);
-}
-
-document.getElementById('start-btn').addEventListener('click', () => {
-  document.getElementById('start-screen').style.display = 'none';
-  buggy.position.copy(trackCurve.getPointAt(0));
-  isPlaying = true;
-  animate();
-});
-</script>
+    </script>
 </body>
 </html>
+
+     
