@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Buggy Racing 3D - Modelo 3D Real</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow: hidden; background: #87CEEB; font-family: 'Arial Black', Impact, sans-serif; touch-action: none; user-select: none; }
+  #game-container { width: 100vw; height: 100vh; }
+  #ui-layer { position: fixed; inset: 0; pointer-events: none; }
+  
+  /* HUD Superior */
+  #top-ui { position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); display: flex; justify-content: space-between; align-items: flex-start; }
+  .ui-text { color: white; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-size: 18px; display: flex; flex-direction: column; align-items: center; }
+  .ui-text span { font-size: 36px; line-height: 1; }
+  
+  #progress-container { flex-grow: 1; margin: 15px 20px 0 20px; background: rgba(0,0,0,0.6); height: 16px; border-radius: 8px; border: 2px solid #333; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+  #progress-bar { height: 100%; background: #0055FF; width: 0%; border-radius: 6px; border-right: 2px solid #00BFFF; }
+  
+  /* Controles */
+  .controls { position: absolute; bottom: 20px; display: flex; width: 100%; justify-content: space-between; padding: 0 20px; pointer-events: none; }
+  .btn-group { display: flex; gap: 15px; pointer-events: auto; }
+  .control-btn { width: 80px; height: 80px; background: rgba(200, 200, 200, 0.4); border: 3px solid #888; border-radius: 15px; color: #333; font-size: 30px; display: flex; justify-content: center; align-items: center; font-weight: bold; box-shadow: 0 4px 0 rgba(0,0,0,0.3); backdrop-filter: blur(4px); }
+  .control-btn:active { background: rgba(255, 255, 255, 0.7); transform: translateY(4px); box-shadow: none; }
+  
+  #start-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.7); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; z-index: 10; }
+  #start-screen h1 { font-size: 42px; margin-bottom: 20px; text-shadow: 4px 4px 0 #FF0000, 8px 8px 0 #000; color: #FFD700; text-align: center; transform: rotate(-5deg); }
+  #start-btn { padding: 15px 50px; font-size: 24px; background: #FF4500; color: white; border: 4px solid #FFD700; border-radius: 15px; font-weight: bold; box-shadow: 0 8px 0 #8B0000; }
+  #start-btn:active { transform: translateY(8px); box-shadow: 0 0px 0 #8B0000; }
+  
+  /* Pantalla de carga del modelo 3D */
+  #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; text-shadow: 2px 2px 0 #000; z-index: 20; text-align: center; }
+</style>
+</head>
+<body>
+<div id="game-container"></div>
+<div id="loading">Cargando Modelo 3D...<br><span style="font-size:14px">Por favor espera</span></div>
+
+<div id="ui-layer">
+  <div id="top-ui">
+    <div class="ui-text">PUESTO <span>1/6</span></div>
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div class="ui-text">VUELTA <span>1/1</span></div>
+  </div>
+
+  <div class="controls">
+    <div class="btn-group">
+      <div class="control-btn" id="btn-left">◄</div>
+      <div class="control-btn" id="btn-right">►</div>
+    </div>
+    <div class="btn-group">
+      <div class="control-btn" id="btn-brake" style="font-size:16px; background: rgba(255, 69, 0, 0.5); color: white;">FRENO</div>
+      <div class="control-btn" id="btn-gas" style="background: rgba(0, 255, 0, 0.5); font-size:16px; color: white;">GAS</div>
+    </div>
+  </div>
+  
+  <div id="start-screen">
+    <h1>BUGGY RACING 3D</h1>
+    <button id="start-btn">JUGAR</button>
+  </div>
+</div>
+
+<script type="importmap">
+{ 
+  "imports": { 
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  } 
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87CEEB);
+scene.fog = new THREE.Fog(0x87CEEB, 150, 500);
+
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.getElementById('game-container').appendChild(renderer.domElement);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// LUCES
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0xE8C37D, 1.5); scene.add(hemiLight);
+const dirLight = new THREE.DirectionalLight(0xfff5d1, 2.5);
+dirLight.position.set(100, 200, 50); dirLight.castShadow = true;
+dirLight.shadow.mapSize.width = 2048; dirLight.shadow.mapSize.height = 2048;
+dirLight.shadow.camera.left = -200; dirLight.shadow.camera.right = 200;
+dirLight.shadow.camera.top = 200; dirLight.shadow.camera.bottom = -200;
+scene.add(dirLight);
+
+// AGUA ANIMADA
+const waterGeo = new THREE.PlaneGeometry(4000, 4000);
+const waterCanvas = document.createElement('canvas'); waterCanvas.width = 512; waterCanvas.height = 512;
+const wCtx = waterCanvas.getContext('2d');
+wCtx.fillStyle = '#0088cc'; wCtx.fillRect(0,0,512,512);
+for(let i=0; i<200; i++) { wCtx.fillStyle = Math.random() > 0.5 ? '#00aaff' : '#0055aa'; wCtx.beginPath(); wCtx.arc(Math.random()*512, Math.random()*512, Math.random()*20+5, 0, Math.PI*2); wCtx.fill(); }
+const waterTex = new THREE.CanvasTexture(waterCanvas); waterTex.wrapS = THREE.RepeatWrapping; waterTex.wrapT = THREE.RepeatWrapping; waterTex.repeat.set(20, 20);
+const waterMat = new THREE.MeshStandardMaterial({ map: waterTex, color: 0x00BFFF, roughness: 0.2, metalness: 0.4 });
+const water = new THREE.Mesh(waterGeo, waterMat); water.rotation.x = -Math.PI / 2; water.position.y = -2.0; scene.add(water);
+
+// PISTA DE ARENA
+const trackCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(0, 0, 0), new THREE.Vector3(40, 0, -80), new THREE.Vector3(120, 0, -100),
+  new THREE.Vector3(160, 0, -20), new THREE.Vector3(140, 0, 80), new THREE.Vector3(60, 0, 120),
+  new THREE.Vector3(-40, 0, 120), new THREE.Vector3(-100, 0, 40), new THREE.Vector3(-80, 0, -60),
+  new THREE.Vector3(-30, 0, -100)
+], true, 'catmullrom', 0.5);
+
+const trackGeo = new THREE.BufferGeometry(); const posArray = [], indexArray = [], uvArray = [];
+for (let i = 0; i <= 300; i++) {
+  const t = i / 300; const p = trackCurve.getPointAt(t); const tangent = trackCurve.getTangentAt(t).normalize();
+  const right = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize();
+  posArray.push(p.x - right.x*12, 0.02, p.z - right.z*12, p.x + right.x*12, 0.02, p.z + right.z*12);
+  uvArray.push(0, t*30, 1, t*30);
+  if (i < 300) { const a = i*2; const b = i*2+1; const c = i*2+2; const d = i*2+3; indexArray.push(a, c, b, b, c, d); }
+}
+trackGeo.setAttribute('position', new THREE.Float32BufferAttribute(posArray, 3));
+trackGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArray, 2));
+trackGeo.setIndex(indexArray); trackGeo.computeVertexNormals();
+
+const sandCanvas = document.createElement('canvas'); sandCanvas.width = 1024; sandCanvas.height = 1024;
+const sCtx = sandCanvas.getContext('2d'); sCtx.fillStyle = '#D2A679'; sCtx.fillRect(0, 0, 1024, 1024);
+for(let i=0; i<20000; i++) { sCtx.fillStyle = Math.random() > 0.5 ? '#C28B4B' : '#E8C37D'; sCtx.fillRect(Math.random()*1024, Math.random()*1024, 3, 3); }
+const sandTex = new THREE.CanvasTexture(sandCanvas); sandTex.wrapS = THREE.RepeatWrapping; sandTex.wrapT = THREE.RepeatWrapping;
+const trackMesh = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({ map: sandTex, roughness: 1, side: THREE.DoubleSide }));
+trackMesh.receiveShadow = true; scene.add(trackMesh);
+
+const island = new THREE.Mesh(new THREE.CylinderGeometry(300, 310, 4, 64), new THREE.MeshStandardMaterial({ color: 0xE8C37D, roughness: 1 }));
+island.position.y = -2; island.receiveShadow = true; scene.add(island);
+
+// ROCAS Y PALMERAS
+const rockMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 1, flatShading: true });
+for (let i = 0; i < 40; i++) {
+  const size = 20 + Math.random() * 30; const rockGeo = new THREE.DodecahedronGeometry(size, 1);
+  const rock = new THREE.Mesh(rockGeo, rockMat); const angle = Math.random() * Math.PI * 2; const dist = 250 + Math.random() * 50;
+  rock.position.set(Math.cos(angle)*dist, size/2 - 5, Math.sin(angle)*dist); rock.castShadow = true; scene.add(rock);
+}
+const palmGroup = new THREE.Group();
+const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5C4033, roughness: 1 });
+const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.8, side: THREE.DoubleSide });
+for (let i = 0; i < 150; i++) {
+  let x = (Math.random() - 0.5) * 500; let z = (Math.random() - 0.5) * 500;
+  if (Math.sqrt(x*x + z*z) > 280) continue;
+  const palm = new THREE.Group();
+  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3((Math.random()-0.5)*5, 6, 0), new THREE.Vector3((Math.random()-0.5)*10, 15, 0)]);
+  const trunk = new THREE.Mesh(new THREE.TubeGeometry(curve, 10, 0.6, 6, false), trunkMat); trunk.castShadow = true; palm.add(trunk);
+  for(let j=0; j<8; j++) {
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(1.5, 8, 4), leafMat);
+    leaf.position.copy(curve.getPointAt(1)); leaf.rotation.z = Math.PI / 2.5; leaf.rotation.y = (j * Math.PI) / 4;
+    leaf.castShadow = true; palm.add(leaf);
+  }
+  palm.position.set(x, 0, z); palm.rotation.y = Math.random() * Math.PI; palmGroup.add(palm);
+}
+scene.add(palmGroup);
+// --- CONTENEDOR DEL VEHÍCULO Y CARGADOR 3D ---
+const vehicleGroup = new THREE.Group(); 
+scene.add(vehicleGroup);
+
+const loader = new GLTFLoader();
+document.getElementById('loading').style.display = 'block';
+
+// ⚠️ AQUÍ VA TU ENLACE ⚠️
+// Cuando tengas tu modelo descargado (ej. buggy.glb) y subido a un servidor,
+// reemplaza este enlace por el tuyo. Ejemplo: 'https://tusitio.com/buggy.glb'
+const modelUrl = 'https://threejs.org/examples/models/gltf/ferrari.glb'; 
+
+loader.load(modelUrl, function (gltf) {
+  const carModel = gltf.scene;
+  
+  // Ajustar tamaño y rotación del modelo (puedes cambiar estos valores según tu modelo)
+  carModel.scale.set(1.2, 1.2, 1.2);
+  carModel.rotation.y = Math.PI; // Asegura que mire hacia adelante
+  
+  // Hacer que el modelo reciba y proyecte sombras
+  carModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  
+  vehicleGroup.add(carModel);
+  document.getElementById('loading').style.display = 'none'; // Ocultar carga
+}, undefined, function (error) {
+  console.error('Error cargando el modelo:', error);
+  document.getElementById('loading').innerText = 'Error al cargar el modelo 3D.';
+});
+
+// --- FÍSICA Y CONTROLES ---
+let speed = 0; const maxSpeed = 35;
+let steer = 0; let carAngle = 0; let isPlaying = false;
+const keys = { gas: false, brake: false, left: false, right: false };
+
+function bindBtn(id, key) {
+  const el = document.getElementById(id);
+  const down = (e) => { e.preventDefault(); keys[key] = true; el.style.transform = 'scale(0.9)'; };
+  const up = (e) => { e.preventDefault(); keys[key] = false; el.style.transform = 'scale(1)'; };
+  el.addEventListener('pointerdown', down); el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
+}
+bindBtn('btn-gas', 'gas'); bindBtn('btn-brake', 'brake'); bindBtn('btn-left', 'left'); bindBtn('btn-right', 'right');
+
+// --- PARTÍCULAS DE POLVO ---
+const dustGeo = new THREE.BufferGeometry();
+const dustCount = 150;
+const dustPositions = new Float32Array(dustCount * 3);
+const dustVelocities = [];
+for(let i=0; i<dustCount; i++) { dustPositions[i*3+1] = -50; dustVelocities.push({x:0, y:0, z:0, life:0}); }
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+const dustMat = new THREE.PointsMaterial({ color: 0xE8C37D, size: 2.0, transparent: true, opacity: 0.6, map: (function(){
+  const c = document.createElement('canvas'); c.width=32; c.height=32;
+  const ctx = c.getContext('2d'); ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(16,16,16,0,Math.PI*2); ctx.fill();
+  return new THREE.CanvasTexture(c);
+})() });
+const dustParticles = new THREE.Points(dustGeo, dustMat);
+scene.add(dustParticles);
+
+// --- BUCLE PRINCIPAL ---
+let lastTime = performance.now();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min((now - lastTime) / 1000, 0.1);
+  lastTime = now;
+
+  // Animar agua
+  waterTex.offset.x += 0.05 * dt;
+  waterTex.offset.y += 0.02 * dt;
+
+  if (isPlaying) {
+    // Física
+    if (keys.gas) speed += 30 * dt;
+    else if (keys.brake) speed -= 45 * dt;
+    else speed -= 10 * dt;
+    speed = Math.max(0, Math.min(speed, maxSpeed));
+
+    if (speed > 1) {
+      if (keys.left) steer = 2.5 * dt;
+      else if (keys.right) steer = -2.5 * dt;
+      else steer = 0;
+    } else steer = 0;
+
+    carAngle += steer * (speed / maxSpeed);
+    
+    // Mover el contenedor del vehículo
+    vehicleGroup.position.x += Math.sin(carAngle) * speed * dt;
+    vehicleGroup.position.z += Math.cos(carAngle) * speed * dt;
+    vehicleGroup.rotation.y = carAngle;
+
+    // Cámara
+    const targetPos = vehicleGroup.position.clone().add(new THREE.Vector3(Math.sin(carAngle)*-16, 6, Math.cos(carAngle)*-16));
+    camera.position.lerp(targetPos, 0.1);
+    camera.lookAt(vehicleGroup.position.clone().add(new THREE.Vector3(0, 2, 0)));
+
+    // Barra de progreso
+    let closestT = 0; let minDist = 9999;
+    for(let t = 0; t <= 1; t += 0.01) {
+      const d = trackCurve.getPointAt(t).distanceTo(vehicleGroup.position);
+      if(d < minDist) { minDist = d; closestT = t; }
+    }
+    document.getElementById('progress-bar').style.width = (closestT * 100) + '%';
+
+    // Polvo
+    const positions = dustGeo.attributes.position.array;
+    if (speed > 5 && Math.random() > 0.3) {
+      let idx = Math.floor(Math.random() * dustCount);
+      positions[idx*3] = vehicleGroup.position.x - Math.sin(carAngle)*2 + (Math.random()-0.5)*2;
+      positions[idx*3+1] = 0.5;
+      positions[idx*3+2] = vehicleGroup.position.z - Math.cos(carAngle)*2 + (Math.random()-0.5)*2;
+      dustVelocities[idx] = { x: (Math.random()-0.5)*2, y: Math.random()*3, z: (Math.random()-0.5)*2, life: 1.0 };
+    }
+    for(let i=0; i<dustCount; i++) {
+      let v = dustVelocities[i];
+      if (v.life > 0) {
+        positions[i*3] += v.x * dt; positions[i*3+1] += v.y * dt; positions[i*3+2] += v.z * dt;
+        v.life -= dt;
+      } else { positions[i*3+1] = -50; }
+    }
+    dustGeo.attributes.position.needsUpdate = true;
+  }
+
+  renderer.render(scene, camera);
+}
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('start-screen').style.display = 'none';
+  vehicleGroup.position.copy(trackCurve.getPointAt(0));
+  isPlaying = true;
+  animate();
+});
+</script>
+</body>
+</html>
