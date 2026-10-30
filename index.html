@@ -101,7 +101,6 @@
             window.addEventListener('resize', onWindowResize);
             animate();
         }
-
                     function crearEntorno() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024; canvas.height = 1024;
@@ -128,6 +127,38 @@
                 roca.castShadow = true; roca.receiveShadow = true; scene.add(roca);
             }
         }
+
+        function crearMateriales() {
+            return {
+                rojo: new THREE.MeshStandardMaterial({ color: 0xe00000, metalness: 0.35, roughness: 0.35 }),
+                blanco: new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.1, roughness: 0.4 }),
+                negro: new THREE.MeshStandardMaterial({ color: 0x151515, metalness: 0.3, roughness: 0.5 }),
+                goma: new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.95 }),
+                cromo: new THREE.MeshStandardMaterial({ color: 0xe6e6e6, metalness: 1.0, roughness: 0.15 }),
+                plata: new THREE.MeshStandardMaterial({ color: 0xc9d1d6, metalness: 0.8, roughness: 0.25 }),
+                piel: new THREE.MeshStandardMaterial({ color: 0xffcc99, roughness: 0.6 }),
+                amarillo: new THREE.MeshStandardMaterial({ color: 0xffd400, emissive: 0xff8800, emissiveIntensity: 0.3 })
+            };
+        }
+
+        // Tubo curvo que sigue una lista de puntos (jaula, resorte)
+        function tubo(puntos, radio, material) {
+            const curva = new THREE.CatmullRomCurve3(puntos);
+            const malla = new THREE.Mesh(new THREE.TubeGeometry(curva, 48, radio, 12, false), material);
+            malla.castShadow = true;
+            return malla;
+        }
+
+        // Cilindro que une dos puntos (barras, escapes, brazos)
+        function cilindroEntre(a, b, radio, material) {
+            const dir = new THREE.Vector3().subVectors(b, a);
+            const largo = dir.length();
+            const malla = new THREE.Mesh(new THREE.CylinderGeometry(radio, radio, largo, 12), material);
+            malla.position.copy(a).add(b).multiplyScalar(0.5);
+            malla.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+            malla.castShadow = true;
+            return malla;
+            }
                     function crearCoche() {
             const M = crearMateriales();
             coche = new THREE.Group();
@@ -255,164 +286,7 @@
             resorte.position.set(0, 3.1, -1.0);
             coche.add(resorte);
 
-        function crearMateriales() {
-            return {
-                rojo: new THREE.MeshStandardMaterial({ color: 0xe00000, metalness: 0.35, roughness: 0.35 }),
-                blanco: new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.1, roughness: 0.4 }),
-                negro: new THREE.MeshStandardMaterial({ color: 0x151515, metalness: 0.3, roughness: 0.5 }),
-                goma: new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.95 }),
-                cromo: new THREE.MeshStandardMaterial({ color: 0xe6e6e6, metalness: 1.0, roughness: 0.15 }),
-                plata: new THREE.MeshStandardMaterial({ color: 0xc9d1d6, metalness: 0.8, roughness: 0.25 }),
-                piel: new THREE.MeshStandardMaterial({ color: 0xffcc99, roughness: 0.6 }),
-                amarillo: new THREE.MeshStandardMaterial({ color: 0xffd400, emissive: 0xff8800, emissiveIntensity: 0.3 })
-            };
-        }
-
-        // Tubo curvo que sigue una lista de puntos (jaula, resorte)
-        function tubo(puntos, radio, material) {
-            const curva = new THREE.CatmullRomCurve3(puntos);
-            const malla = new THREE.Mesh(new THREE.TubeGeometry(curva, 48, radio, 12, false), material);
-            malla.castShadow = true;
-            return malla;
-        }
-
-        // Cilindro que une dos puntos (barras, escapes, brazos)
-        function cilindroEntre(a, b, radio, material) {
-            const dir = new THREE.Vector3().subVectors(b, a);
-            const largo = dir.length();
-            const malla = new THREE.Mesh(new THREE.CylinderGeometry(radio, radio, largo, 12), material);
-            malla.position.copy(a).add(b).multiplyScalar(0.5);
-            malla.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
-            malla.castShadow = true;
-            return malla;
-            }
-                                function crearCoche() {
-            const M = crearMateriales();
-            coche = new THREE.Group();
-
-            // 1. CARROCERÍA: perfil suave extruido a lo ancho del coche
-            const perfil = new THREE.Shape();
-            perfil.moveTo(-2.0, 0.7);
-            perfil.lineTo(2.1, 0.7);
-            perfil.quadraticCurveTo(2.5, 0.8, 2.4, 1.2);
-            perfil.quadraticCurveTo(2.2, 1.5, 1.4, 1.5);
-            perfil.lineTo(-1.2, 1.5);
-            perfil.quadraticCurveTo(-2.1, 1.4, -2.2, 1.0);
-            perfil.quadraticCurveTo(-2.2, 0.7, -2.0, 0.7);
-
-            const geoCarroceria = new THREE.ExtrudeGeometry(perfil, {
-                depth: 1.7, bevelEnabled: true, bevelSegments: 6, steps: 1,
-                bevelSize: 0.15, bevelThickness: 0.15, curveSegments: 24
-            });
-            geoCarroceria.rotateY(-Math.PI / 2);
-            geoCarroceria.center();
-            const carroceria = new THREE.Mesh(geoCarroceria, M.rojo);
-            carroceria.position.y = 1.1;
-            carroceria.castShadow = true; carroceria.receiveShadow = true;
-            coche.add(carroceria);
-
-            // 2. LLAMAS EN EL CAPÓ (textura con fondo transparente)
-            const lienzoLlamas = document.createElement('canvas');
-            lienzoLlamas.width = 512; lienzoLlamas.height = 512;
-            const gl = lienzoLlamas.getContext('2d');
-            for (let capa = 0; capa < 2; capa++) {
-                gl.fillStyle = capa === 0 ? '#ffd400' : '#ff7a00';
-                const escala = capa === 0 ? 1 : 0.6;
-                for (let i = 0; i < 6; i++) {
-                    const x = 60 + i * 80;
-                    const base = 512 - (capa === 0 ? 0 : 120);
-                    const punta = (i % 2 === 0 ? 40 : 110) + (capa === 0 ? 0 : 80);
-                    gl.beginPath();
-                    gl.moveTo(x - 40 * escala, base);
-                    gl.quadraticCurveTo(x - 30 * escala, base - 200, x, punta);
-                    gl.quadraticCurveTo(x + 30 * escala, base - 200, x + 40 * escala, base);
-                    gl.closePath();
-                    gl.fill();
-                }
-            }
-            const decalLlamas = new THREE.Mesh(
-                new THREE.PlaneGeometry(1.2, 1.4),
-                new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(lienzoLlamas), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 })
-            );
-            decalLlamas.rotation.x = -Math.PI / 2;
-            decalLlamas.position.set(0, 1.53, 0.4);
-            coche.add(decalLlamas);
-
-            // 3. NÚMERO "01" EN LOS LATERALES
-            const lienzoNum = document.createElement('canvas');
-            lienzoNum.width = 512; lienzoNum.height = 256;
-            const gn = lienzoNum.getContext('2d');
-            gn.fillStyle = '#ffffff'; gn.beginPath(); gn.arc(256, 128, 110, 0, Math.PI * 2); gn.fill();
-            gn.fillStyle = '#d30000'; gn.font = 'bold 150px Arial';
-            gn.textAlign = 'center'; gn.textBaseline = 'middle'; gn.fillText('01', 256, 136);
-            const matNum = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(lienzoNum), transparent: true, polygonOffset: true, polygonOffsetFactor: -1 });
-            const numIzq = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.4), matNum);
-            numIzq.position.set(-1.02, 1.15, -0.2); numIzq.rotation.y = -Math.PI / 2;
-            const numDer = numIzq.clone();
-            numDer.position.x = 1.02; numDer.rotation.y = Math.PI / 2;
-            coche.add(numIzq, numDer);
-
-            // 4. ASIENTO Y PILOTO
-            const asiento = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 0.7), M.negro);
-            asiento.position.set(0, 1.85, -0.5); asiento.castShadow = true; coche.add(asiento);
-            const respaldo = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.2), M.negro);
-            respaldo.position.set(0, 2.1, -0.85); coche.add(respaldo);
-
-            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.7, 16), M.rojo);
-            torso.position.set(0, 2.25, -0.45); torso.castShadow = true; coche.add(torso);
-
-            const cabeza = new THREE.Group();
-            cabeza.position.set(0, 2.85, -0.35);
-            const cara = new THREE.Mesh(new THREE.SphereGeometry(0.3, 32, 32), M.piel);
-            cara.castShadow = true; cabeza.add(cara);
-            const casco = new THREE.Mesh(new THREE.SphereGeometry(0.34, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), M.rojo);
-            casco.position.y = 0.06; casco.castShadow = true; cabeza.add(casco);
-            const franjaCasco = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.6), M.blanco);
-            franjaCasco.position.set(0, 0.36, -0.02); cabeza.add(franjaCasco);
-            [-0.1, 0.1].forEach(x => {
-                const ojo = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), M.negro);
-                ojo.position.set(x, -0.02, 0.28); cabeza.add(ojo);
-                const gafa = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.025, 8, 16), M.negro);
-                gafa.position.set(x, -0.02, 0.27); cabeza.add(gafa);
-            });
-            coche.add(cabeza);
-
-            // Brazos hasta el volante
-            coche.add(cilindroEntre(new THREE.Vector3(-0.32, 2.45, -0.35), new THREE.Vector3(-0.28, 2.2, 0.12), 0.08, M.rojo));
-            coche.add(cilindroEntre(new THREE.Vector3(0.32, 2.45, -0.35), new THREE.Vector3(0.28, 2.2, 0.12), 0.08, M.rojo));
-
-            const volante = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 8, 20), M.negro);
-            volante.position.set(0, 2.4, 0.2); volante.rotation.x = -Math.PI / 3;
-            coche.add(volante);
-
-            // 5. JAULA ANTIVUELCO (arcos laterales y travesaños)
-            [-1, 1].forEach(s => {
-                coche.add(tubo([
-                    new THREE.Vector3(s * 0.9, 1.55, 1.0),
-                    new THREE.Vector3(s * 0.9, 2.4, 0.4),
-                    new THREE.Vector3(s * 0.9, 3.0, -0.1),
-                    new THREE.Vector3(s * 0.9, 3.05, -0.7),
-                    new THREE.Vector3(s * 0.9, 2.4, -1.2),
-                    new THREE.Vector3(s * 0.9, 1.5, -1.35)
-                ], 0.07, M.negro));
-            });
-            coche.add(tubo([
-                new THREE.Vector3(-0.9, 3.0, -0.1),
-                new THREE.Vector3(0, 3.12, -0.1),
-                new THREE.Vector3(0.9, 3.0, -0.1)
-            ], 0.06, M.negro));
-            coche.add(cilindroEntre(new THREE.Vector3(-0.9, 3.05, -0.7), new THREE.Vector3(0.9, 3.05, -0.7), 0.06, M.negro));
-
-            // Resorte en la parte trasera
-            const espiral = [];
-            for (let i = 0; i <= 16; i++) {
-                const a = i * 1.0;
-                espiral.push(new THREE.Vector3(Math.cos(a) * 0.05, i * 0.025, Math.sin(a) * 0.05));
-            }
-            const resorte = tubo(espiral, 0.02, M.cromo);
-            resorte.position.set(0, 3.1, -1.0);
-            coche.add(resorte);
-                                                // 6. MOTOR, ESCAPES Y FRONTAL
+                                    // 6. MOTOR, ESCAPES Y FRONTAL
             const motor = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.6, 0.8), M.negro);
             motor.position.set(0, 1.8, -1.75); motor.castShadow = true; coche.add(motor);
             coche.add(cilindroEntre(new THREE.Vector3(-0.35, 0.95, -2.1), new THREE.Vector3(-0.45, 1.2, -2.9), 0.09, M.cromo));
@@ -554,7 +428,7 @@
             btnDer.addEventListener('mousedown', () => direccion = 1);
             btnDer.addEventListener('mouseup', () => direccion = 0);
             }
-                                function actualizarParticulas(delta) {
+                    function actualizarParticulas(delta) {
             coche.updateMatrixWorld(true);
             const haciaAtras = new THREE.Vector3(Math.sin(coche.rotation.y), 0, -Math.cos(coche.rotation.y));
 
@@ -628,3 +502,5 @@
     </script>
 </body>
 </html>
+            
+            
