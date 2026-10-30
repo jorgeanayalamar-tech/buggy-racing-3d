@@ -52,6 +52,7 @@
         let velocidad = 0, direccion = 0, acelerando = false, frenando = false, tiempoGlobal = 0;
         const VELOCIDAD_MAXIMA = 38, ACELERACION = 18, FRENADO = 30, VELOCIDAD_GIRO = 1.8;
         const RADIO_RUEDA = 0.66;
+        const ESCALA_RUEDA_TRASERA = 1.18;
 
         function init() {
             renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -184,7 +185,7 @@
             carroceria.castShadow = true; carroceria.receiveShadow = true;
             coche.add(carroceria);
 
-            // 2. LLAMAS EN EL CAPÓ (textura con fondo transparente)
+            // 2. LLAMAS AMARILLAS EN EL CAPÓ (más visibles)
             const lienzoLlamas = document.createElement('canvas');
             lienzoLlamas.width = 512; lienzoLlamas.height = 512;
             const gl = lienzoLlamas.getContext('2d');
@@ -204,11 +205,11 @@
                 }
             }
             const decalLlamas = new THREE.Mesh(
-                new THREE.PlaneGeometry(1.2, 1.4),
+                new THREE.PlaneGeometry(1.7, 1.8),
                 new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(lienzoLlamas), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 })
             );
             decalLlamas.rotation.x = -Math.PI / 2;
-            decalLlamas.position.set(0, 1.53, 0.4);
+            decalLlamas.position.set(0, 1.72, 1.1);
             coche.add(decalLlamas);
 
             // 3. NÚMERO "01" EN LOS LATERALES
@@ -285,7 +286,6 @@
             const resorte = tubo(espiral, 0.02, M.cromo);
             resorte.position.set(0, 3.1, -1.0);
             coche.add(resorte);
-
                                     // 6. MOTOR, ESCAPES Y FRONTAL
             const motor = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.6, 0.8), M.negro);
             motor.position.set(0, 1.8, -1.75); motor.castShadow = true; coche.add(motor);
@@ -302,20 +302,21 @@
             scene.add(coche);
         }
 
-        // 7. RUEDAS: orientación (dirección) > giro (rodadura)
+        // 7. RUEDAS: orientación (dirección) > giro (rodadura). Traseras 18 % más grandes.
         function crearRuedas() {
             const M = crearMateriales();
             const posiciones = [
-                { x: -1.1, z: 1.4, delantera: true },
-                { x: 1.1, z: 1.4, delantera: true },
-                { x: -1.1, z: -1.4, delantera: false },
-                { x: 1.1, z: -1.4, delantera: false }
+                { x: -1.1, z: 1.4, delantera: true, escala: 1 },
+                { x: 1.1, z: 1.4, delantera: true, escala: 1 },
+                { x: -1.1, z: -1.4, delantera: false, escala: ESCALA_RUEDA_TRASERA },
+                { x: 1.1, z: -1.4, delantera: false, escala: ESCALA_RUEDA_TRASERA }
             ];
 
             posiciones.forEach(p => {
                 const orientacion = new THREE.Group();
                 orientacion.position.set(p.x, 0.8, p.z);
                 const giro = new THREE.Group();
+                giro.scale.setScalar(p.escala);
                 orientacion.add(giro);
 
                 // Neumático
@@ -342,12 +343,13 @@
                 giro.add(tapacubos);
 
                 coche.add(orientacion);
-                ruedas.push({ orientacion, giro, delantera: p.delantera });
+                ruedas.push({ orientacion, giro, delantera: p.delantera, escala: p.escala });
 
-                // Guardabarros en arco sobre cada rueda
+                // Guardabarros en arco sobre cada rueda (escala igual que la rueda)
                 const guardabarros = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.12, 12, 24, Math.PI), M.rojo);
                 guardabarros.rotation.y = Math.PI / 2;
                 guardabarros.position.set(p.x, 0.8, p.z);
+                guardabarros.scale.setScalar(p.escala);
                 guardabarros.castShadow = true;
                 coche.add(guardabarros);
             });
@@ -427,7 +429,7 @@
             btnDer.addEventListener('touchend', (e) => { e.preventDefault(); direccion = 0; });
             btnDer.addEventListener('mousedown', () => direccion = 1);
             btnDer.addEventListener('mouseup', () => direccion = 0);
-            }
+    }
                     function actualizarParticulas(delta) {
             coche.updateMatrixWorld(true);
             const haciaAtras = new THREE.Vector3(Math.sin(coche.rotation.y), 0, -Math.cos(coche.rotation.y));
@@ -478,9 +480,9 @@
                 coche.position.y = Math.sin(tiempoGlobal * 25) * 0.02;
                 coche.rotation.z = Math.sin(tiempoGlobal * 15) * 0.01;
 
-                // Ruedas: rodadura y dirección
+                // Ruedas: rodadura (según su radio real) y dirección en las delanteras
                 ruedas.forEach(r => {
-                    r.giro.rotation.x += (velocidad * delta) / RADIO_RUEDA;
+                    r.giro.rotation.x += (velocidad * delta) / (RADIO_RUEDA * r.escala);
                     if (r.delantera) r.orientacion.rotation.y = direccion * 0.4;
                 });
 
@@ -502,5 +504,3 @@
     </script>
 </body>
 </html>
-            
-            
