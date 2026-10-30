@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Beach Buggy - Proporciones Reales y Suaves</title>
+    <title>Beach Buggy</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
         body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Luckiest Guy', cursive; user-select: none; }
         canvas { display: block; }
 
         #hud-top { position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; pointer-events: none; z-index: 10; }
-        .texto-hud { color: white; font-size: 24px; -webkit-text-stroke: 2px black; text-shadow: 3px 3px 0 #000; letter-spacing: 1px;}
+        .texto-hud { color: white; font-size: 24px; -webkit-text-stroke: 2px black; text-shadow: 3px 3px 0 #000; letter-spacing: 1px; }
 
-        #barra-progreso { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 40%; height: 22px; background: rgba(0,0,0,0.6); border: 4px solid #fff; border-radius: 12px; display: flex; align-items: center; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.5);}
+        #barra-progreso { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 40%; height: 22px; background: rgba(0,0,0,0.6); border: 4px solid #fff; border-radius: 12px; display: flex; align-items: center; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
         #barra-relleno { height: 100%; width: 15%; background: linear-gradient(90deg, #00aaff, #00ffff); border-radius: 8px; }
 
         #btn-pausa { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: radial-gradient(circle, #ffffff, #0088ff); border: 4px solid #004488; border-radius: 50%; z-index: 10; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 0 #002244; cursor: pointer; }
@@ -33,6 +33,13 @@
         #item-der { right: 20px; background: radial-gradient(circle, #88ff88, #006600); box-shadow: 0 0 20px #00ff00, inset 0 0 15px #003300; }
         #item-der::after { background: radial-gradient(circle, #ffffff, #0088ff); box-shadow: 0 0 15px #00aaff; }
     </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+        }
+    }
+    </script>
 </head>
 <body>
     <div id="hud-top"><div class="texto-hud" id="txt-puesto">PUESTO 6/6</div><div class="texto-hud" id="txt-vuelta">VUELTA 1/1</div></div>
@@ -44,15 +51,15 @@
         <div class="panel-metal"><div class="btn" id="btn-izq">◀</div><div class="btn" id="btn-der">▶</div></div>
         <div class="panel-metal"><div class="btn btn-accion" id="btn-freno">FRENO</div><div class="btn btn-accion" id="btn-gas">GAS</div></div>
     </div>
+        <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
-    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-        <script>
         let scene, camera, renderer, reloj;
         let coche, ruedas = [], sistemaEscape, sistemaPolvo;
         let velocidad = 0, direccion = 0, acelerando = false, frenando = false, tiempoGlobal = 0;
         const VELOCIDAD_MAXIMA = 38, ACELERACION = 18, FRENADO = 30, VELOCIDAD_GIRO = 1.8;
         const RADIO_RUEDA = 0.66;
-        const ESCALA_RUEDA_TRASERA = 1.18;
 
         function init() {
             renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -129,233 +136,36 @@
             }
         }
 
-        function crearMateriales() {
-            return {
-                rojo: new THREE.MeshStandardMaterial({ color: 0xe00000, metalness: 0.35, roughness: 0.35 }),
-                blanco: new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.1, roughness: 0.4 }),
-                negro: new THREE.MeshStandardMaterial({ color: 0x151515, metalness: 0.3, roughness: 0.5 }),
-                goma: new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.95 }),
-                cromo: new THREE.MeshStandardMaterial({ color: 0xe6e6e6, metalness: 1.0, roughness: 0.15 }),
-                plata: new THREE.MeshStandardMaterial({ color: 0xc9d1d6, metalness: 0.8, roughness: 0.25 }),
-                piel: new THREE.MeshStandardMaterial({ color: 0xffcc99, roughness: 0.6 }),
-                amarillo: new THREE.MeshStandardMaterial({ color: 0xffd400, emissive: 0xff8800, emissiveIntensity: 0.3 })
-            };
-        }
-
-        // Tubo curvo que sigue una lista de puntos (jaula, resorte)
-        function tubo(puntos, radio, material) {
-            const curva = new THREE.CatmullRomCurve3(puntos);
-            const malla = new THREE.Mesh(new THREE.TubeGeometry(curva, 48, radio, 12, false), material);
-            malla.castShadow = true;
-            return malla;
-        }
-
-        // Cilindro que une dos puntos (barras, escapes, brazos)
-        function cilindroEntre(a, b, radio, material) {
-            const dir = new THREE.Vector3().subVectors(b, a);
-            const largo = dir.length();
-            const malla = new THREE.Mesh(new THREE.CylinderGeometry(radio, radio, largo, 12), material);
-            malla.position.copy(a).add(b).multiplyScalar(0.5);
-            malla.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
-            malla.castShadow = true;
-            return malla;
-            }
-                    function crearCoche() {
-            const M = crearMateriales();
+        // Carga buggy.glb (en la misma carpeta que index.html).
+        // Cada rueda va dentro de un pivote: el pivote gira para dirigir y la rueda para rodar.
+        function crearCoche() {
             coche = new THREE.Group();
-
-            // 1. CARROCERÍA: perfil suave extruido a lo ancho del coche
-            const perfil = new THREE.Shape();
-            perfil.moveTo(-2.0, 0.7);
-            perfil.lineTo(2.1, 0.7);
-            perfil.quadraticCurveTo(2.5, 0.8, 2.4, 1.2);
-            perfil.quadraticCurveTo(2.2, 1.5, 1.4, 1.5);
-            perfil.lineTo(-1.2, 1.5);
-            perfil.quadraticCurveTo(-2.1, 1.4, -2.2, 1.0);
-            perfil.quadraticCurveTo(-2.2, 0.7, -2.0, 0.7);
-
-            const geoCarroceria = new THREE.ExtrudeGeometry(perfil, {
-                depth: 1.7, bevelEnabled: true, bevelSegments: 6, steps: 1,
-                bevelSize: 0.15, bevelThickness: 0.15, curveSegments: 24
-            });
-            geoCarroceria.rotateY(-Math.PI / 2);
-            geoCarroceria.center();
-            const carroceria = new THREE.Mesh(geoCarroceria, M.rojo);
-            carroceria.position.y = 1.1;
-            carroceria.castShadow = true; carroceria.receiveShadow = true;
-            coche.add(carroceria);
-
-            // 2. LLAMAS AMARILLAS EN EL CAPÓ (más visibles)
-            const lienzoLlamas = document.createElement('canvas');
-            lienzoLlamas.width = 512; lienzoLlamas.height = 512;
-            const gl = lienzoLlamas.getContext('2d');
-            for (let capa = 0; capa < 2; capa++) {
-                gl.fillStyle = capa === 0 ? '#ffd400' : '#ff7a00';
-                const escala = capa === 0 ? 1 : 0.6;
-                for (let i = 0; i < 6; i++) {
-                    const x = 60 + i * 80;
-                    const base = 512 - (capa === 0 ? 0 : 120);
-                    const punta = (i % 2 === 0 ? 40 : 110) + (capa === 0 ? 0 : 80);
-                    gl.beginPath();
-                    gl.moveTo(x - 40 * escala, base);
-                    gl.quadraticCurveTo(x - 30 * escala, base - 200, x, punta);
-                    gl.quadraticCurveTo(x + 30 * escala, base - 200, x + 40 * escala, base);
-                    gl.closePath();
-                    gl.fill();
-                }
-            }
-            const decalLlamas = new THREE.Mesh(
-                new THREE.PlaneGeometry(1.7, 1.8),
-                new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(lienzoLlamas), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 })
-            );
-            decalLlamas.rotation.x = -Math.PI / 2;
-            decalLlamas.position.set(0, 1.72, 1.1);
-            coche.add(decalLlamas);
-
-            // 3. NÚMERO "01" EN LOS LATERALES
-            const lienzoNum = document.createElement('canvas');
-            lienzoNum.width = 512; lienzoNum.height = 256;
-            const gn = lienzoNum.getContext('2d');
-            gn.fillStyle = '#ffffff'; gn.beginPath(); gn.arc(256, 128, 110, 0, Math.PI * 2); gn.fill();
-            gn.fillStyle = '#d30000'; gn.font = 'bold 150px Arial';
-            gn.textAlign = 'center'; gn.textBaseline = 'middle'; gn.fillText('01', 256, 136);
-            const matNum = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(lienzoNum), transparent: true, polygonOffset: true, polygonOffsetFactor: -1 });
-            const numIzq = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.4), matNum);
-            numIzq.position.set(-1.02, 1.15, -0.2); numIzq.rotation.y = -Math.PI / 2;
-            const numDer = numIzq.clone();
-            numDer.position.x = 1.02; numDer.rotation.y = Math.PI / 2;
-            coche.add(numIzq, numDer);
-
-            // 4. ASIENTO Y PILOTO
-            const asiento = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 0.7), M.negro);
-            asiento.position.set(0, 1.85, -0.5); asiento.castShadow = true; coche.add(asiento);
-            const respaldo = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.2), M.negro);
-            respaldo.position.set(0, 2.1, -0.85); coche.add(respaldo);
-
-            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.7, 16), M.rojo);
-            torso.position.set(0, 2.25, -0.45); torso.castShadow = true; coche.add(torso);
-
-            const cabeza = new THREE.Group();
-            cabeza.position.set(0, 2.85, -0.35);
-            const cara = new THREE.Mesh(new THREE.SphereGeometry(0.3, 32, 32), M.piel);
-            cara.castShadow = true; cabeza.add(cara);
-            const casco = new THREE.Mesh(new THREE.SphereGeometry(0.34, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), M.rojo);
-            casco.position.y = 0.06; casco.castShadow = true; cabeza.add(casco);
-            const franjaCasco = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.6), M.blanco);
-            franjaCasco.position.set(0, 0.36, -0.02); cabeza.add(franjaCasco);
-            [-0.1, 0.1].forEach(x => {
-                const ojo = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), M.negro);
-                ojo.position.set(x, -0.02, 0.28); cabeza.add(ojo);
-                const gafa = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.025, 8, 16), M.negro);
-                gafa.position.set(x, -0.02, 0.27); cabeza.add(gafa);
-            });
-            coche.add(cabeza);
-
-            // Brazos hasta el volante
-            coche.add(cilindroEntre(new THREE.Vector3(-0.32, 2.45, -0.35), new THREE.Vector3(-0.28, 2.2, 0.12), 0.08, M.rojo));
-            coche.add(cilindroEntre(new THREE.Vector3(0.32, 2.45, -0.35), new THREE.Vector3(0.28, 2.2, 0.12), 0.08, M.rojo));
-
-            const volante = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 8, 20), M.negro);
-            volante.position.set(0, 2.4, 0.2); volante.rotation.x = -Math.PI / 3;
-            coche.add(volante);
-
-            // 5. JAULA ANTIVUELCO (arcos laterales y travesaños)
-            [-1, 1].forEach(s => {
-                coche.add(tubo([
-                    new THREE.Vector3(s * 0.9, 1.55, 1.0),
-                    new THREE.Vector3(s * 0.9, 2.4, 0.4),
-                    new THREE.Vector3(s * 0.9, 3.0, -0.1),
-                    new THREE.Vector3(s * 0.9, 3.05, -0.7),
-                    new THREE.Vector3(s * 0.9, 2.4, -1.2),
-                    new THREE.Vector3(s * 0.9, 1.5, -1.35)
-                ], 0.07, M.negro));
-            });
-            coche.add(tubo([
-                new THREE.Vector3(-0.9, 3.0, -0.1),
-                new THREE.Vector3(0, 3.12, -0.1),
-                new THREE.Vector3(0.9, 3.0, -0.1)
-            ], 0.06, M.negro));
-            coche.add(cilindroEntre(new THREE.Vector3(-0.9, 3.05, -0.7), new THREE.Vector3(0.9, 3.05, -0.7), 0.06, M.negro));
-
-            // Resorte en la parte trasera
-            const espiral = [];
-            for (let i = 0; i <= 16; i++) {
-                const a = i * 1.0;
-                espiral.push(new THREE.Vector3(Math.cos(a) * 0.05, i * 0.025, Math.sin(a) * 0.05));
-            }
-            const resorte = tubo(espiral, 0.02, M.cromo);
-            resorte.position.set(0, 3.1, -1.0);
-            coche.add(resorte);
-                                    // 6. MOTOR, ESCAPES Y FRONTAL
-            const motor = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.6, 0.8), M.negro);
-            motor.position.set(0, 1.8, -1.75); motor.castShadow = true; coche.add(motor);
-            coche.add(cilindroEntre(new THREE.Vector3(-0.35, 0.95, -2.1), new THREE.Vector3(-0.45, 1.2, -2.9), 0.09, M.cromo));
-            coche.add(cilindroEntre(new THREE.Vector3(0.35, 0.95, -2.1), new THREE.Vector3(0.45, 1.2, -2.9), 0.09, M.cromo));
-
-            coche.add(cilindroEntre(new THREE.Vector3(-0.95, 0.85, 2.35), new THREE.Vector3(0.95, 0.85, 2.35), 0.07, M.negro));
-            [-0.6, 0.6].forEach(x => {
-                const faro = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), M.amarillo);
-                faro.position.set(x, 1.2, 2.45); coche.add(faro);
-            });
-
-            crearRuedas();
             scene.add(coche);
-        }
 
-        // 7. RUEDAS: orientación (dirección) > giro (rodadura). Traseras 18 % más grandes.
-        function crearRuedas() {
-            const M = crearMateriales();
-            const posiciones = [
-                { x: -1.1, z: 1.4, delantera: true, escala: 1 },
-                { x: 1.1, z: 1.4, delantera: true, escala: 1 },
-                { x: -1.1, z: -1.4, delantera: false, escala: ESCALA_RUEDA_TRASERA },
-                { x: 1.1, z: -1.4, delantera: false, escala: ESCALA_RUEDA_TRASERA }
-            ];
+            const loader = new GLTFLoader();
+            loader.load('buggy.glb', (gltf) => {
+                const modelo = gltf.scene;
+                modelo.traverse(o => {
+                    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+                });
+                coche.add(modelo);
 
-            posiciones.forEach(p => {
-                const orientacion = new THREE.Group();
-                orientacion.position.set(p.x, 0.8, p.z);
-                const giro = new THREE.Group();
-                giro.scale.setScalar(p.escala);
-                orientacion.add(giro);
-
-                // Neumático
-                const neumatico = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.24, 16, 32), M.goma);
-                neumatico.rotation.y = Math.PI / 2; neumatico.castShadow = true;
-                giro.add(neumatico);
-
-                // Llanta
-                const llanta = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.44, 32), M.plata);
-                llanta.rotation.z = Math.PI / 2;
-                giro.add(llanta);
-
-                // Radios
-                for (let r = 0; r < 5; r++) {
-                    const radio = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.6, 0.08), M.plata);
-                    radio.position.x = 0.27;
-                    radio.rotation.x = (r * Math.PI * 2) / 5;
-                    giro.add(radio);
-                }
-
-                // Tapacubos
-                const tapacubos = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16), M.cromo);
-                tapacubos.rotation.z = Math.PI / 2; tapacubos.position.x = 0.3;
-                giro.add(tapacubos);
-
-                coche.add(orientacion);
-                ruedas.push({ orientacion, giro, delantera: p.delantera, escala: p.escala });
-
-                // Guardabarros en arco sobre cada rueda (escala igual que la rueda)
-                const guardabarros = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.12, 12, 24, Math.PI), M.rojo);
-                guardabarros.rotation.y = Math.PI / 2;
-                guardabarros.position.set(p.x, 0.8, p.z);
-                guardabarros.scale.setScalar(p.escala);
-                guardabarros.castShadow = true;
-                coche.add(guardabarros);
+                ['rueda_del_izq', 'rueda_del_der', 'rueda_tras_izq', 'rueda_tras_der'].forEach(nombre => {
+                    const rueda = modelo.getObjectByName(nombre);
+                    if (!rueda) return;
+                    const pivote = new THREE.Group();
+                    pivote.position.copy(rueda.position);
+                    rueda.position.set(0, 0, 0);
+                    pivote.add(rueda);
+                    coche.add(pivote);
+                    ruedas.push({ pivote, rueda, delantera: nombre.includes('del'), escala: rueda.scale.x });
+                });
+            }, undefined, (error) => {
+                console.error(error);
+                document.getElementById('txt-puesto').textContent = 'ERROR MODELO';
             });
-        }
-
-        // 8. SISTEMA DE PARTÍCULAS (escape y polvo)
+            }
+                    // Sistema de partículas (escape y polvo)
         function crearSistemaParticulas(cantidad, color, tamaño, opacidad) {
             const geo = new THREE.BufferGeometry();
             const posiciones = new Float32Array(cantidad * 3);
@@ -405,7 +215,6 @@
             sistema.geo.attributes.position.needsUpdate = true;
         }
 
-        // 9. CONTROLES TÁCTILES Y RATÓN
         function configurarControles() {
             const btnGas = document.getElementById('btn-gas'), btnFreno = document.getElementById('btn-freno');
             const btnIzq = document.getElementById('btn-izq'), btnDer = document.getElementById('btn-der');
@@ -429,14 +238,14 @@
             btnDer.addEventListener('touchend', (e) => { e.preventDefault(); direccion = 0; });
             btnDer.addEventListener('mousedown', () => direccion = 1);
             btnDer.addEventListener('mouseup', () => direccion = 0);
-    }
+            }
                     function actualizarParticulas(delta) {
             coche.updateMatrixWorld(true);
             const haciaAtras = new THREE.Vector3(Math.sin(coche.rotation.y), 0, -Math.cos(coche.rotation.y));
 
             if (acelerando && velocidad > 2) {
-                const salidaIzq = coche.localToWorld(new THREE.Vector3(-0.45, 1.2, -2.9));
-                const salidaDer = coche.localToWorld(new THREE.Vector3(0.45, 1.2, -2.9));
+                const salidaIzq = coche.localToWorld(new THREE.Vector3(-0.35, 0.6, -2.5));
+                const salidaDer = coche.localToWorld(new THREE.Vector3(0.35, 0.6, -2.5));
                 const velEscape = haciaAtras.clone().multiplyScalar(4);
                 emitir(sistemaEscape, salidaIzq, velEscape, 0.1, 0.5, 2);
                 emitir(sistemaEscape, salidaDer, velEscape, 0.1, 0.5, 2);
@@ -480,10 +289,10 @@
                 coche.position.y = Math.sin(tiempoGlobal * 25) * 0.02;
                 coche.rotation.z = Math.sin(tiempoGlobal * 15) * 0.01;
 
-                // Ruedas: rodadura (según su radio real) y dirección en las delanteras
+                // Ruedas: rodadura según su radio real, y dirección en las delanteras
                 ruedas.forEach(r => {
-                    r.giro.rotation.x += (velocidad * delta) / (RADIO_RUEDA * r.escala);
-                    if (r.delantera) r.orientacion.rotation.y = direccion * 0.4;
+                    r.rueda.rotation.x += (velocidad * delta) / (RADIO_RUEDA * r.escala);
+                    if (r.delantera) r.pivote.rotation.y = direccion * 0.4;
                 });
 
                 // Cámara detrás del coche
@@ -504,3 +313,4 @@
     </script>
 </body>
 </html>
+            
